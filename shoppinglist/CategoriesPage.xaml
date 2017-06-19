@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reactive:ReactiveContentPage 
+x:TypeArguments="local:CategoriesViewModel"
+xmlns="http://xamarin.com/schemas/2014/forms" 
+xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+x:Class="shoppinglist.CategoriesPage"
+xmlns:cells="clr-namespace:shoppinglist.Cells;assembly=shoppinglist"
+    xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
+xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
+    <reactive:ReactiveContentPage.Content>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            <Entry x:Name="NewCategory" Placeholder="Add New Category" Grid.Row="0" Grid.Column="0" />
+            <Button x:Name="AddCategory" Text="Add" Grid.Row="0" Grid.Column="1" />
+            <ListView x:Name="Categories" CachingStrategy="RecycleElement" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <cells:CategoryCell />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </reactive:ReactiveContentPage.Content>
+</reactive:ReactiveContentPage>
