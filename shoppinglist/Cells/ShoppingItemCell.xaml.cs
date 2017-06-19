@@ -29,6 +29,18 @@ namespace shoppinglist.Cells
 					this.ViewModel,
 					vm => vm.Quantity,
                     v => v.Quantity.Text));
+
+				disposables(this.OneWayBind(
+					this.ViewModel,
+                    vm => vm.IsCompleted,
+                    v => v.CompletionStatus.Source,
+                    (isCompleted) => {
+                        if (isCompleted) {
+                            return ImageSource.FromFile("ic_check_box.png");
+                        }
+
+                        return ImageSource.FromFile("ic_check_box_outline.png");
+                }));
 			});
 		}
 	}

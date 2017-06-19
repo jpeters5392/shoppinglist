@@ -20,6 +20,13 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _description, value);
 		}
 
+		private string _id;
+		public string Id
+		{
+			get => _id;
+			set => this.RaiseAndSetIfChanged(ref _id, value);
+		}
+
 		private double _quantity;
 		public double Quantity
 		{
@@ -27,11 +34,20 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _quantity, value);
 		}
 
+		private bool _isCompleted;
+		public bool IsCompleted
+		{
+			get => _isCompleted;
+			set => this.RaiseAndSetIfChanged(ref _isCompleted, value);
+		}
+
 		public ShoppingItemViewModel(ShoppingItem item)
 		{
 			Name = item.Name;
             Description = item.Description;
             Quantity = item.Quantity;
+            IsCompleted = item.CompletedOn != DateTime.MinValue;
+            Id = item.Id;
 		}
 	}
 }

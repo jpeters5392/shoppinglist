@@ -66,19 +66,18 @@ namespace shoppinglist.ViewModels
 
         private CategoryService CategoryService { get; set; }
 
-        private CacheService CacheService { get; set; }
-
-		public ShoppingCartViewModel()
+        public ShoppingCartViewModel()
 		{
 			ShoppingItemService = Locator.Current.GetService<ShoppingItemService>();
             CategoryService = Locator.Current.GetService<CategoryService>();
-            CacheService = Locator.Current.GetService<CacheService>();
 
             CategoryItems = new Dictionary<string, string>();
 
-            _rawShoppingItems = Observable.FromAsync(ShoppingItemService.GetShoppingItems)
-			.ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, x => x.RawShoppingItems);
+            var shoppingItemsObservable = Observable.FromAsync(ShoppingItemService.GetShoppingItems)
+                                          .ObserveOn(RxApp.MainThreadScheduler);
+            
+            _rawShoppingItems = shoppingItemsObservable.ToProperty(this, x => x.RawShoppingItems);
+            
 			_categories = Observable.FromAsync(CategoryService.GetCategories)
 			.ObserveOn(RxApp.MainThreadScheduler)
 			.Select(categories =>
@@ -112,8 +111,8 @@ namespace shoppinglist.ViewModels
 			})
 			.ToProperty(this, x => x.ShoppingItems);
 
-			AddShoppingItem = ReactiveCommand.CreateFromTask(async () =>
-			{
+            AddShoppingItem = ReactiveCommand.CreateFromTask(async () =>
+            {
                 string categoryId = null;
                 if (NewItemSelectedCategory > -1)
                 {
@@ -135,7 +134,7 @@ namespace shoppinglist.ViewModels
                 NewItemDescription = string.Empty;
                 NewItemSelectedCategory = -1;
                 NewQuantity = 0;
-			});
+            });
 		}
 	}
 }

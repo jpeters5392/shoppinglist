@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ReactiveUI.XamForms;
 using ReactiveUI;
 using shoppinglist.ViewModels;
+using Xamarin.Forms;
 
 namespace shoppinglist
 {
@@ -50,6 +51,11 @@ namespace shoppinglist
                     v => v.AddItem,
 					nameof(this.AddItem.Clicked)));
 			});
+
+            this.ShoppingItems.ItemSelected += (sender, e) =>
+            {
+                ((ListView)sender).SelectedItem = null;
+            };
         }
     }
 }
