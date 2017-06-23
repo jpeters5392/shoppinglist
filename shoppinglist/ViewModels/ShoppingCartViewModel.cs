@@ -133,9 +133,13 @@ namespace shoppinglist.ViewModels
 				return new ObservableCollection<ShoppingItemGroupViewModel>(items.GroupBy(x => x.CategoryId).Select(x =>
 				{
                     string categoryName = "";
-                    if (CategoryItemsByKey.ContainsKey(x.Key))
+                    if (x.Key != null && CategoryItemsByKey.ContainsKey(x.Key))
                     {
                         categoryName = CategoryItemsByKey[x.Key];
+                    }
+                    else
+                    {
+                        categoryName = "None";
                     }
 
 					var group = new ShoppingItemGroupViewModel(categoryName, string.Empty);
@@ -154,6 +158,7 @@ namespace shoppinglist.ViewModels
                 {
                     categoryId = CategoryItemsByName[Categories.ToList()[NewItemSelectedCategory]];
                 }
+
                 var newItem = await ShoppingItemService.AddShoppingItem(
                     categoryId,
                     NewItemName,
