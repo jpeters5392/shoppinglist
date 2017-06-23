@@ -6,7 +6,7 @@ xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 x:Class="shoppinglist.Cells.ShoppingItemGroup"
 xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
 xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
-    <ContentView BackgroundColor="#00251a" Padding="5" HorizontalOptions="FillAndExpand">
-        <Label x:Name="GroupName" TextColor="#ffffff" FontSize="Large" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" />
+    <ContentView BackgroundColor="{StaticResource PrimaryDark}" Padding="5" HorizontalOptions="FillAndExpand">
+        <Label x:Name="GroupName" TextColor="{StaticResource PrimaryText}" FontSize="Large" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" />
     </ContentView>
 </reactive:ReactiveViewCell>

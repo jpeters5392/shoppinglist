@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--Get colors from: http://www.materialpalette.com/-->
+  <color name="primaryDark">#005662</color>
+</resources>

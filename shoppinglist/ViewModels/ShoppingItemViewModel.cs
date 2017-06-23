@@ -1,11 +1,14 @@
 ﻿using System;
 using ReactiveUI;
 using shoppinglist.Models;
+using shoppinglist.Services;
+using Splat;
 
 namespace shoppinglist.ViewModels
 {
 	public class ShoppingItemViewModel : ReactiveObject
 	{
+        public ReactiveCommand ItemSelected { get; }
 		private string _name;
 		public string Name
 		{
@@ -41,6 +44,8 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _isCompleted, value);
 		}
 
+        private ShoppingItemService Service { get; }
+
 		public ShoppingItemViewModel(ShoppingItem item)
 		{
 			Name = item.Name;
@@ -48,6 +53,20 @@ namespace shoppinglist.ViewModels
             Quantity = item.Quantity;
             IsCompleted = item.CompletedOn != DateTime.MinValue;
             Id = item.Id;
+
+            Service = Locator.Current.GetService<ShoppingItemService>();
+
+            ItemSelected = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (IsCompleted)
+                {
+                    await Service.UncompleteItem(Id);
+                }
+                else
+                {
+                    await Service.CompleteItem(Id);
+                }
+            });
 		}
 	}
 }

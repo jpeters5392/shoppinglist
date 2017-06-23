@@ -11,6 +11,7 @@ using Plugin.Connectivity;
 using Splat;
 using shoppinglist.Models;
 using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace shoppinglist.Services
 {
@@ -29,10 +30,19 @@ namespace shoppinglist.Services
 
 		}
 
+        protected override ObservableCollection<Category> CachedData
+        {
+            get => Cache.Categories;
+            set 
+            {
+                Cache.Categories = value;
+            }
+        }
+
 		public async Task<IEnumerable<Category>> GetCategories()
 		{
 			var items = await GetItems(x => true);
-
+            CacheData(items.ToList());
 			return items.OrderBy(c => c.Name);
 		}
 

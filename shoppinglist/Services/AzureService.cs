@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.MobileServices;
 using Microsoft.WindowsAzure.MobileServices.Sync;
 using Plugin.Connectivity;
+using shoppinglist.Cache;
 using Splat;
 
 namespace shoppinglist.Services
@@ -14,20 +16,37 @@ namespace shoppinglist.Services
     {
         protected SqlInitializer SqlInitializer { get; }
 
+        protected DataCache Cache { get; }
+
         private string AllQueryName { get; }
 
         public AzureService(string allQueryName)
         {
+            Cache = Locator.Current.GetService<DataCache>();
             SqlInitializer = Locator.Current.GetService<SqlInitializer>();
             AllQueryName = allQueryName;
         }
 
         protected abstract IMobileServiceSyncTable<T> Table { get; }
 
+        protected abstract ObservableCollection<T> CachedData { get; set; }
+
         protected async Task<bool> Initialize()
         {
             return await SqlInitializer.Initialize();
         }
+
+        protected async Task CacheData()
+        {
+			var items = await Table.ToListAsync();
+
+			CachedData = new ObservableCollection<T>(items);
+        }
+
+		protected void CacheData(IList<T> items)
+		{
+			CachedData = new ObservableCollection<T>(items);
+		}
 
 		protected async Task SyncItems()
 		{
@@ -62,6 +81,7 @@ namespace shoppinglist.Services
 			await Table.InsertAsync(item);
 
 			await SyncItems();
+            await CacheData();
 			return item;
 		}
 
@@ -72,6 +92,7 @@ namespace shoppinglist.Services
 			await Table.UpdateAsync(item);
 
 			await SyncItems();
+            await CacheData();
 			return item;
 		}
     }

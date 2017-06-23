@@ -11,6 +11,7 @@ using Plugin.Connectivity;
 using Splat;
 using shoppinglist.Models;
 using System.Linq;
+using System.Collections.ObjectModel;
 
 namespace shoppinglist.Services
 {
@@ -29,9 +30,19 @@ namespace shoppinglist.Services
             
         }
 
+		protected override ObservableCollection<ShoppingItem> CachedData
+		{
+            get => Cache.ShoppingItems;
+			set
+			{
+				Cache.ShoppingItems = value;
+			}
+		}
+
 		public async Task<IEnumerable<ShoppingItem>> GetShoppingItems()
 		{
-            var items = await GetItems(x => true);
+            var items = await GetItems(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddDays(-1));
+            CacheData(items.ToList());
 
 			return items.OrderBy(c => c.Name);
 		}
@@ -60,6 +71,22 @@ namespace shoppinglist.Services
             await Table.UpdateAsync(item);
 
 			await SyncItems();
+            await CacheData();
+			return item;
+		}
+
+		public async Task<ShoppingItem> UncompleteItem(string itemId)
+		{
+			await Initialize();
+			await SyncItems();
+
+			var item = await Table.LookupAsync(itemId);
+            item.CompletedOn = DateTime.MinValue;
+
+			await Table.UpdateAsync(item);
+
+			await SyncItems();
+            await CacheData();
 			return item;
 		}
 	}

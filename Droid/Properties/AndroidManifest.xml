@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="peterson.joel.shoppinglist">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.1" package="peterson.joel.shoppinglist">
 	<uses-sdk android:minSdkVersion="21" />
-	<application android:label="Shopping List"></application>
+	<uses-permission android:name="android.permission.INTERNET" />
+	<application android:label="Shopping List" android:icon="@drawable/icon"></application>
 </manifest>

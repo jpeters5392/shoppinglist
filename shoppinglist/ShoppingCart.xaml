@@ -8,29 +8,9 @@ xmlns:cells="clr-namespace:shoppinglist.Cells;assembly=shoppinglist"
     xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
 xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
     <reactive:ReactiveContentPage.Content>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Label Text="Item" Grid.Row="0" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-            <Entry x:Name="NewItem" Placeholder="New Shopping Item" Grid.Row="0" Grid.Column="1" />
-            <Label Text="Description" Grid.Row="1" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-            <Entry x:Name="NewDescription" Placeholder="Description (Optional)" Grid.Row="1" Grid.Column="1" />
-            <Label Text="Quantity" Grid.Row="2" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-            <Entry x:Name="NewQuantity" Keyboard="Numeric" Placeholder="Quantity" Grid.Row="2" Grid.Column="1" />
-            <Label Text="Category" Grid.Row="3" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-            <Picker x:Name="CategoryType" Title="Choose a category" Grid.Row="3" Grid.Column="1" />
-            <Button x:Name="AddItem" Text="Add" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" />
-            <ListView x:Name="ShoppingItems" CachingStrategy="RecycleElement" HasUnevenRows="true" IsGroupingEnabled="true" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2">
+        <AbsoluteLayout>
+            <ListView x:Name="ShoppingItems" CachingStrategy="RecycleElement" HasUnevenRows="true" IsGroupingEnabled="true" AbsoluteLayout.LayoutBounds="0,0,1,1"
+                AbsoluteLayout.LayoutFlags="All">
                 <ListView.GroupHeaderTemplate>
                     <DataTemplate>
                         <cells:ShoppingItemGroup />
@@ -42,6 +22,38 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </Grid>
+            <Button x:Name="FAB" Text="" BorderRadius="45" BorderColor="{StaticResource PrimaryText}" BorderWidth="3" Image="ic_add_shopping_cart.png" WidthRequest="90" HeightRequest="90" BackgroundColor="{StaticResource Accent}" AbsoluteLayout.LayoutFlags="PositionProportional" AbsoluteLayout.LayoutBounds=".90,.97,90,90" />
+            <ContentView BackgroundColor="{StaticResource PrimaryDark}" x:Name="AddNewItem" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,1,1,0.7">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Source="ic_close.png" Grid.Row="0" Grid.Column="1" HorizontalOptions="End" Margin="10">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer x:Name="CloseForm" />
+                        </Image.GestureRecognizers>
+                    </Image>
+                    <Label TextColor="#ffffff" Text="Item" Grid.Row="1" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewItem" Placeholder="New Shopping Item" Grid.Row="1" Grid.Column="1" />
+                    <Label TextColor="#ffffff" Text="Description" Grid.Row="2" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewDescription" Placeholder="Description (Optional)" Grid.Row="2" Grid.Column="1" />
+                    <Label TextColor="#ffffff" Text="Quantity" Grid.Row="3" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewQuantity" Keyboard="Numeric" Placeholder="Quantity" Grid.Row="3" Grid.Column="1" />
+                    <Label TextColor="#ffffff" Text="Category" Grid.Row="4" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <Picker TextColor="#ffffff" x:Name="CategoryType" Title="Choose a category" Grid.Row="4" Grid.Column="1" />
+                    <Button x:Name="AddItem" BackgroundColor="{StaticResource Accent}" TextColor="{StaticResource AccentText}" Text="Add" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" />
+                </Grid>
+            </ContentView>
+            <ActivityIndicator x:Name="ProgressIndicator" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds=".5,1,.5,.1" />
+        </AbsoluteLayout>
     </reactive:ReactiveContentPage.Content>
 </reactive:ReactiveContentPage>

@@ -150,6 +150,7 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SplashActivity.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -181,6 +182,21 @@
     <AndroidResource Include="Resources\drawable-xhdpi\ic_check_box_outline.png" />
     <AndroidResource Include="Resources\drawable-xxhdpi\ic_check_box.png" />
     <AndroidResource Include="Resources\drawable-xxhdpi\ic_check_box_outline.png" />
+    <AndroidResource Include="Resources\drawable\ic_save.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_save.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_save.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_save.png" />
+    <AndroidResource Include="Resources\drawable\ic_close.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_close.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_close.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_close.png" />
+    <AndroidResource Include="Resources\drawable\background_splash.xml" />
+    <AndroidResource Include="Resources\values\colors.xml" />
+    <AndroidResource Include="Resources\drawable\ic_add_shopping_cart.png" />
+    <AndroidResource Include="Resources\drawable-hdpi\ic_add_shopping_cart.png" />
+    <AndroidResource Include="Resources\drawable-xhdpi\ic_add_shopping_cart.png" />
+    <AndroidResource Include="Resources\drawable-xxhdpi\ic_add_shopping_cart.png" />
+    <AndroidResource Include="Resources\drawable\logo_splash.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <Import Project="..\packages\Xamarin.Android.Support.Vector.Drawable.23.3.0\build\Xamarin.Android.Support.Vector.Drawable.targets" Condition="Exists('..\packages\Xamarin.Android.Support.Vector.Drawable.23.3.0\build\Xamarin.Android.Support.Vector.Drawable.targets')" />

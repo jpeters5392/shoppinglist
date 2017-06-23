@@ -6,12 +6,15 @@ using shoppinglist.Models;
 using shoppinglist.Services;
 using Splat;
 using System.Reactive.Linq;
+using shoppinglist.Cache;
 
 namespace shoppinglist.ViewModels
 {
     public class CategoriesViewModel : ReactiveObject
     {
         public ReactiveCommand AddCategory { get; }
+
+        public ReactiveCommand Refresh { get; }
 
         private string _newCategoryName;
         public string NewCategoryName
@@ -27,14 +30,15 @@ namespace shoppinglist.ViewModels
         }
 
         private CategoryService CategoryService { get; set; }
+        private DataCache Cache { get; }
 
         public CategoriesViewModel()
         {
             CategoryService = Locator.Current.GetService<CategoryService>();
+            Cache = Locator.Current.GetService<DataCache>();
 
-            _categories = Observable.FromAsync(CategoryService.GetCategories)
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Select(categories => {
+            _categories = this.WhenAnyValue(x => x.Cache.Categories)
+                              .Select(categories => {
                 var vms = categories.Select(category => new CategoryViewModel(category));
                 return new ObservableCollection<CategoryViewModel>(vms);
             })
@@ -43,10 +47,14 @@ namespace shoppinglist.ViewModels
             AddCategory = ReactiveCommand.CreateFromTask(async () =>
             {
                 var newCategory = await CategoryService.AddCategory(NewCategoryName);
-                Categories.Add(new CategoryViewModel(newCategory));
 
                 NewCategoryName = string.Empty;
             });
+
+            Refresh = ReactiveCommand.CreateFromTask(async () =>
+			{
+                await CategoryService.GetCategories();
+			});
         }
     }
 }

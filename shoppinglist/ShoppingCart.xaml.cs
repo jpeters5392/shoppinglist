@@ -45,11 +45,38 @@ namespace shoppinglist
                     vm => vm.NewItemSelectedCategory,
                     v => v.CategoryType.SelectedIndex));
 
+				disposables(this.Bind(
+                    this.ViewModel,
+					vm => vm.IsLoadingData,
+                    v => v.ProgressIndicator.IsVisible));
+
+				disposables(this.Bind(
+                    this.ViewModel,
+                    vm => vm.ShouldShowGrid,
+                    v => v.AddNewItem.IsVisible));
+
+				disposables(this.Bind(
+					this.ViewModel,
+                    vm => vm.IsLoadingData,
+                    v => v.ProgressIndicator.IsRunning));
+
 				disposables(this.BindCommand(
 					this.ViewModel,
                     vm => vm.AddShoppingItem,
                     v => v.AddItem,
 					nameof(this.AddItem.Clicked)));
+
+				disposables(this.BindCommand(
+					this.ViewModel,
+                    vm => vm.OpenAddForm,
+                    v => v.FAB,
+					nameof(this.FAB.Clicked)));
+
+				disposables(this.BindCommand(
+					this.ViewModel,
+                    vm => vm.CloseAddForm,
+					v => v.CloseForm,
+                    nameof(this.CloseForm.Tapped)));
 			});
 
             this.ShoppingItems.ItemSelected += (sender, e) =>

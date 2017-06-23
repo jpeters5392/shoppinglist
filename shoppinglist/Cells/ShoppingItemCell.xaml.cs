@@ -41,6 +41,12 @@ namespace shoppinglist.Cells
 
                         return ImageSource.FromFile("ic_check_box_outline.png");
                 }));
+
+				disposables(this.BindCommand(
+					this.ViewModel,
+                    vm => vm.ItemSelected,
+                    v => v.CellSelected,
+                    nameof(this.CellSelected.Tapped)));
 			});
 		}
 	}
