@@ -22,11 +22,6 @@ namespace shoppinglist
 
 			Children.Add(shoppingCart);
             Children.Add(categories);
-
-            this.CurrentPageChanged += (sender, e) => {
-                App.CategoryRefresh.Subscribe();
-                App.ShoppingListRefresh.Subscribe();
-            };
         }
     }
 }

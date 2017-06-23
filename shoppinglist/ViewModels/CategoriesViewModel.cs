@@ -32,6 +32,9 @@ namespace shoppinglist.ViewModels
         private CategoryService CategoryService { get; set; }
         private DataCache Cache { get; }
 
+		private ObservableAsPropertyHelper<bool> _isRefreshing;
+		public bool IsRefreshing => _isRefreshing.Value;
+
         public CategoriesViewModel()
         {
             CategoryService = Locator.Current.GetService<CategoryService>();
@@ -55,6 +58,8 @@ namespace shoppinglist.ViewModels
 			{
                 await CategoryService.GetCategories();
 			});
+
+            _isRefreshing = Refresh.IsExecuting.ToProperty(this, x => x.IsRefreshing);
         }
     }
 }

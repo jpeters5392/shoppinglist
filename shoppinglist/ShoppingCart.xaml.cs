@@ -50,10 +50,19 @@ namespace shoppinglist
 					vm => vm.IsLoadingData,
                     v => v.ProgressIndicator.IsVisible));
 
-				disposables(this.Bind(
-                    this.ViewModel,
-                    vm => vm.ShouldShowGrid,
-                    v => v.AddNewItem.IsVisible));
+                disposables(this.WhenAnyValue(x => x.ViewModel.ShouldShowGrid)
+                    .Subscribe(shouldShowGrid => {
+	                    if (shouldShowGrid)
+	                    {
+                            var bounds = new Rectangle(0, 1, this.ParentLayout.Width, this.ParentLayout.Height);
+                            this.AddNewItem.LayoutTo(bounds);
+	                    }
+                        else
+	                    {
+							var bounds = new Rectangle(0, 1, this.ParentLayout.Width, 0);
+							this.AddNewItem.LayoutTo(bounds);
+	                    }
+                }));
 
 				disposables(this.Bind(
 					this.ViewModel,
@@ -77,6 +86,16 @@ namespace shoppinglist
                     vm => vm.CloseAddForm,
 					v => v.CloseForm,
                     nameof(this.CloseForm.Tapped)));
+
+				disposables(this.OneWayBind(
+                    this.ViewModel,
+                    vm => vm.Refresh,
+                    v => v.ShoppingItems.RefreshCommand));
+
+				disposables(this.OneWayBind(
+                    this.ViewModel,
+                    vm => vm.IsRefreshing,
+                    v => v.ShoppingItems.IsRefreshing));
 			});
 
             this.ShoppingItems.ItemSelected += (sender, e) =>

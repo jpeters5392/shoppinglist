@@ -28,6 +28,16 @@ namespace shoppinglist
                     vm => vm.AddCategory,
                     v => v.AddCategory,
                     nameof(this.AddCategory.Clicked)));
+
+				disposables(this.OneWayBind(
+					this.ViewModel,
+					vm => vm.Refresh,
+                    v => v.Categories.RefreshCommand));
+
+				disposables(this.OneWayBind(
+					this.ViewModel,
+					vm => vm.IsRefreshing,
+					v => v.Categories.IsRefreshing));
             });
 
         }

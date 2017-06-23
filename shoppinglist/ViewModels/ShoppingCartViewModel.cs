@@ -81,6 +81,9 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _isLoadingData, value);
 		}
 
+        private ObservableAsPropertyHelper<bool> _isRefreshing;
+        public bool IsRefreshing => _isRefreshing.Value;
+
         private Dictionary<string, string> CategoryItemsByKey;
 
         private Dictionary<string, string> CategoryItemsByName;
@@ -186,6 +189,8 @@ namespace shoppinglist.ViewModels
             {
                 await ShoppingItemService.GetShoppingItems();
             });
+
+            _isRefreshing = Refresh.IsExecuting.ToProperty(this, x => x.IsRefreshing);
 		}
 	}
 }

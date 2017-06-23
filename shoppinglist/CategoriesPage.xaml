@@ -19,7 +19,7 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
             </Grid.ColumnDefinitions>
             <Entry x:Name="NewCategory" Placeholder="Add New Category" Grid.Row="0" Grid.Column="0" />
             <Button x:Name="AddCategory" Text="Add" Grid.Row="0" Grid.Column="1" />
-            <ListView x:Name="Categories" CachingStrategy="RecycleElement" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <ListView x:Name="Categories" IsPullToRefreshEnabled="true" CachingStrategy="RecycleElement" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <cells:CategoryCell />

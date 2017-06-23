@@ -30,8 +30,6 @@ namespace shoppinglist
         protected override void OnStart()
         {
             // Handle when your app starts
-            var categoryService = Locator.Current.GetService<CategoryService>();
-            var itemsService = Locator.Current.GetService<ShoppingItemService>();
             CategoryRefresh.Subscribe();
             ShoppingListRefresh.Subscribe();
         }
@@ -46,6 +44,8 @@ namespace shoppinglist
 			// Handle when your app resumes
 			var categoryService = Locator.Current.GetService<CategoryService>();
 			var itemsService = Locator.Current.GetService<ShoppingItemService>();
+			CategoryRefresh = Observable.FromAsync(categoryService.GetCategories);
+			ShoppingListRefresh = Observable.FromAsync(itemsService.GetShoppingItems);
 			CategoryRefresh.Subscribe();
 			ShoppingListRefresh.Subscribe();
         }
