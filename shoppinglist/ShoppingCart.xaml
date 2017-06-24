@@ -31,7 +31,7 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
-                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto" />
@@ -50,7 +50,14 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
                     <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewQuantity" Keyboard="Numeric" Placeholder="Quantity" Grid.Row="3" Grid.Column="1" />
                     <Label TextColor="#ffffff" Text="Category" Grid.Row="4" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
                     <Picker TextColor="#ffffff" x:Name="CategoryType" Title="Choose a category" Grid.Row="4" Grid.Column="1" />
-                    <Button x:Name="AddItem" BackgroundColor="{StaticResource Accent}" TextColor="{StaticResource AccentText}" Text="Add" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" />
+                    <Button x:Name="AddItem" BackgroundColor="{StaticResource Accent}"
+                        TextColor="{StaticResource AccentText}"
+                        Text="Add"
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        VerticalOptions="End"
+                        Margin="0,0,0,15"/>
                 </Grid>
             </ContentView>
             <ActivityIndicator x:Name="ProgressIndicator" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds=".5,1,.5,.1" />

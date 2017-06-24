@@ -41,7 +41,7 @@ namespace shoppinglist.Services
 
 		public async Task<IEnumerable<ShoppingItem>> GetShoppingItems()
 		{
-            var items = await GetItems(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddDays(-1));
+            var items = await GetItems(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24));
             CacheData(items.ToList());
 
 			return items.OrderBy(c => c.Name);

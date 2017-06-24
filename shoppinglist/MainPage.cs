@@ -1,6 +1,7 @@
 ﻿using System;
 using shoppinglist.ViewModels;
 using Xamarin.Forms;
+using Xamarin.Forms.PlatformConfiguration;
 
 namespace shoppinglist
 {
@@ -22,6 +23,8 @@ namespace shoppinglist
 
 			Children.Add(shoppingCart);
             Children.Add(categories);
+
+            Xamarin.Forms.PlatformConfiguration.AndroidSpecific.TabbedPage.SetIsSwipePagingEnabled(this, false);
         }
     }
 }

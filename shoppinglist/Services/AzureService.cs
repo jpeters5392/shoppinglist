@@ -95,5 +95,16 @@ namespace shoppinglist.Services
             await CacheData();
 			return item;
 		}
+
+		public virtual async Task DeleteItem(T item)
+		{
+			await Initialize();
+
+            await Table.DeleteAsync(item);
+
+			await SyncItems();
+			await CacheData();
+			return;
+		}
     }
 }

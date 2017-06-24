@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Input;
 using ReactiveUI;
 using ReactiveUI.XamForms;
 using shoppinglist.ViewModels;
@@ -49,5 +50,10 @@ namespace shoppinglist.Cells
                     nameof(this.CellSelected.Tapped)));
 			});
 		}
-	}
+
+        void Handle_Clicked(object sender, System.EventArgs e)
+        {
+            ((ICommand)this.ViewModel.ItemDeleted).Execute(null);
+        }
+    }
 }

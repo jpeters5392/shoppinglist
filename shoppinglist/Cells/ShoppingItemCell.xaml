@@ -6,6 +6,9 @@ xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 x:Class="shoppinglist.Cells.ShoppingItemCell"
 xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
 xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
+    <ViewCell.ContextActions>
+        <MenuItem x:Name="DeleteItem" Text="Delete" IsDestructive="true" Clicked="Handle_Clicked" />
+    </ViewCell.ContextActions>
     <ContentView>
         <Grid>
             <Grid.RowDefinitions>
@@ -14,18 +17,19 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="50" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
 
-            <Image x:Name="CompletionStatus" Margin="10,5" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" />
+            <Image x:Name="CompletionStatus" Source="ic_check_box_outline.png" Aspect="AspectFit" WidthRequest="50" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer x:Name="CellSelected" />
+                </Image.GestureRecognizers>
+            </Image>
             <Label x:Name="ItemName" Margin="10,5,10,0" Grid.Row="0" Grid.Column="1" FontSize="Large" />
             <Label x:Name="ItemDescription" Margin="10,0,10,5" Grid.Row="1" Grid.Column="1" />
             <Label x:Name="Quantity" Margin="10,5" Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" FontSize="Large" VerticalTextAlignment="Center" />
         </Grid>
-        <ContentView.GestureRecognizers>
-            <TapGestureRecognizer x:Name="CellSelected" />
-        </ContentView.GestureRecognizers>
     </ContentView>
 </reactive:ReactiveViewCell>

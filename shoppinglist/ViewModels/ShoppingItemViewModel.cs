@@ -9,6 +9,8 @@ namespace shoppinglist.ViewModels
 	public class ShoppingItemViewModel : ReactiveObject
 	{
         public ReactiveCommand ItemSelected { get; }
+        public ReactiveCommand ItemDeleted { get; }
+
 		private string _name;
 		public string Name
 		{
@@ -67,6 +69,11 @@ namespace shoppinglist.ViewModels
                     await Service.CompleteItem(Id);
                 }
             });
+
+			ItemDeleted = ReactiveCommand.CreateFromTask(async () =>
+			{
+				await Service.DeleteItem(item);
+			});
 		}
 	}
 }
