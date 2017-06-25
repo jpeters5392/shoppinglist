@@ -27,8 +27,13 @@ namespace shoppinglist.Services
 
 		public CategoryService() : base("allCategories")
 		{
-
+            
 		}
+
+        protected override async Task CacheData()
+        {
+            CacheData(await Table.ToListAsync());
+        }
 
         protected override ObservableCollection<Category> CachedData
         {

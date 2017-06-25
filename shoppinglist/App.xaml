@@ -7,6 +7,10 @@
             <Color x:Key="Accent">#f9a825</Color>
             <Color x:Key="PrimaryText">#ffffff</Color>
             <Color x:Key="AccentText">#000000</Color>
+
+            <Style x:Key="MealLabel" TargetType="Label">
+                <Setter Property="Margin" Value="5,0,5,0" />
+            </Style>
         </ResourceDictionary>
 	</Application.Resources>
 </Application>

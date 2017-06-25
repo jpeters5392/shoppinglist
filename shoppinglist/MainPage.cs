@@ -21,8 +21,15 @@ namespace shoppinglist
             var shoppingCartViewModel = new ShoppingCartViewModel();
             shoppingCart.ViewModel = shoppingCartViewModel;
 
+            var mealPlanner = new MealPlanner();
+			mealPlanner.Icon = "ic_schedule.png";
+			mealPlanner.Title = "Meal Planner";
+			var mealPlannerViewModel = new MealPlannerViewModel();
+			mealPlanner.ViewModel = mealPlannerViewModel;
+
 			Children.Add(shoppingCart);
             Children.Add(categories);
+            Children.Add(mealPlanner);
 
             Xamarin.Forms.PlatformConfiguration.AndroidSpecific.TabbedPage.SetIsSwipePagingEnabled(this, false);
         }

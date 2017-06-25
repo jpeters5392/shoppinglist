@@ -44,6 +44,15 @@
     <EmbeddedResource Include="Cells\ShoppingItemGroup.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
+    <EmbeddedResource Include="MealPlanner.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Cells\MealItemGroup.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Cells\MealItemCell.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -79,6 +88,21 @@
       <DependentUpon>ShoppingItemGroup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Cache\DataCache.cs" />
+    <Compile Include="MealPlanner.xaml.cs">
+      <DependentUpon>MealPlanner.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\MealPlannerViewModel.cs" />
+    <Compile Include="Models\MealItem.cs" />
+    <Compile Include="Models\MealType.cs" />
+    <Compile Include="Services\MealItemService.cs" />
+    <Compile Include="Cells\MealItemGroup.xaml.cs">
+      <DependentUpon>MealItemGroup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\MealItemGroupViewModel.cs" />
+    <Compile Include="ViewModels\MealItemViewModel.cs" />
+    <Compile Include="Cells\MealItemCell.xaml.cs">
+      <DependentUpon>MealItemCell.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Xamarin.Forms.Core">

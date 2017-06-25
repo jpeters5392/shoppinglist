@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reactive:ReactiveViewCell 
+x:TypeArguments="local:MealItemViewModel"
+xmlns="http://xamarin.com/schemas/2014/forms" 
+xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+x:Class="shoppinglist.Cells.MealItemCell"
+xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
+xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
+    <ContentView>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Text="Breakfast" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" Style="{StaticResource MealLabel}" />
+            <Label x:Name="BreakfastItems" Grid.Row="0" Grid.Column="1" />
+            <Label Text="Lunch" FontAttributes="Bold" Grid.Row="1" Grid.Column="0" Style="{StaticResource MealLabel}" />
+            <Label x:Name="LunchItems" Grid.Row="1" Grid.Column="1" />
+            <Label Text="Dinner" FontAttributes="Bold" Grid.Row="2" Grid.Column="0" Style="{StaticResource MealLabel}" />
+            <Label x:Name="DinnerItems" Grid.Row="2" Grid.Column="1" />
+        </Grid>
+    </ContentView>
+</reactive:ReactiveViewCell>

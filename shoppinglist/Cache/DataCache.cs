@@ -22,6 +22,13 @@ namespace shoppinglist.Cache
 			set => this.RaiseAndSetIfChanged(ref _categories, value);
 		}
 
+		private ObservableCollection<MealItem> _mealItems;
+		public ObservableCollection<MealItem> MealItems
+		{
+			get => _mealItems;
+			set => this.RaiseAndSetIfChanged(ref _mealItems, value);
+		}
+
         private bool _isLoading;
         public bool IsLoading
         {
@@ -33,6 +40,7 @@ namespace shoppinglist.Cache
         {
             ShoppingItems = new ObservableCollection<ShoppingItem>();
             Categories = new ObservableCollection<Category>();
+            MealItems = new ObservableCollection<MealItem>();
         }
     }
 }

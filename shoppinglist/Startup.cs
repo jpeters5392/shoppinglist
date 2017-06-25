@@ -13,6 +13,7 @@ namespace shoppinglist
             Locator.CurrentMutable.RegisterConstant(new DataCache(), typeof(DataCache));
             Locator.CurrentMutable.RegisterConstant(new SqlInitializer(), typeof(SqlInitializer));
             Locator.CurrentMutable.RegisterConstant(new CategoryService(), typeof(CategoryService));
+            Locator.CurrentMutable.RegisterConstant(new MealItemService(), typeof(MealItemService));
             Locator.CurrentMutable.RegisterConstant(new ShoppingItemService(), typeof(ShoppingItemService));
         }
     }

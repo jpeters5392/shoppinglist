@@ -39,6 +39,11 @@ namespace shoppinglist.Services
 			}
 		}
 
+		protected override async Task CacheData()
+		{
+			CacheData(await Table.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).ToListAsync());
+		}
+
 		public async Task<IEnumerable<ShoppingItem>> GetShoppingItems()
 		{
             var items = await GetItems(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24));

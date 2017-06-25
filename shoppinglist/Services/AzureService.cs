@@ -36,12 +36,7 @@ namespace shoppinglist.Services
             return await SqlInitializer.Initialize();
         }
 
-        protected async Task CacheData()
-        {
-			var items = await Table.ToListAsync();
-
-			CachedData = new ObservableCollection<T>(items);
-        }
+        protected abstract Task CacheData();
 
 		protected void CacheData(IList<T> items)
 		{

@@ -23,6 +23,11 @@ namespace shoppinglist.Services
             get; private set;
         }
 
+		public IMobileServiceSyncTable<MealItem> MealItemTable
+		{
+			get; private set;
+		}
+
         public IMobileServiceSyncTable<ShoppingItem> ShoppingItemTable
         {
             get; private set;
@@ -58,6 +63,7 @@ namespace shoppinglist.Services
 			//Define table
 			store.DefineTable<Category>();
             store.DefineTable<ShoppingItem>();
+            store.DefineTable<MealItem>();
 
 			//Initialize SyncContext
 			await Client.SyncContext.InitializeAsync(store);
@@ -65,6 +71,7 @@ namespace shoppinglist.Services
 			//Get our sync table that will call out to azure
 			CategoryTable = Client.GetSyncTable<Category>();
             ShoppingItemTable = Client.GetSyncTable<ShoppingItem>();
+            MealItemTable = Client.GetSyncTable<MealItem>();
 
             initializerTask.SetResult(true);
             return initializerTask.Task.Result;

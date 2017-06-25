@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <reactive:ReactiveContentPage 
-x:TypeArguments="local:ShoppingCartViewModel"
+x:TypeArguments="local:MealPlannerViewModel"
 xmlns="http://xamarin.com/schemas/2014/forms" 
 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-x:Class="shoppinglist.ShoppingCart"
+x:Class="shoppinglist.MealPlanner"
 xmlns:cells="clr-namespace:shoppinglist.Cells;assembly=shoppinglist"
-    xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
+xmlns:local="clr-namespace:shoppinglist.ViewModels;assembly=shoppinglist"
 xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
     <reactive:ReactiveContentPage.Content>
         <AbsoluteLayout x:Name="ParentLayout">
-            <ListView x:Name="ShoppingItems" IsPullToRefreshEnabled="true" CachingStrategy="RecycleElement" HasUnevenRows="true" IsGroupingEnabled="true" AbsoluteLayout.LayoutBounds="0,0,1,1"
+            <ListView x:Name="MealItems" IsPullToRefreshEnabled="true" CachingStrategy="RecycleElement" HasUnevenRows="true" IsGroupingEnabled="true" AbsoluteLayout.LayoutBounds="0,0,1,1"
                 AbsoluteLayout.LayoutFlags="All">
                 <ListView.GroupHeaderTemplate>
                     <DataTemplate>
-                        <cells:ShoppingItemGroup />
+                        <cells:MealItemGroup />
                     </DataTemplate>
                 </ListView.GroupHeaderTemplate>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <cells:ShoppingItemCell />
+                        <cells:MealItemCell />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
             <Button x:Name="FAB" Text="" BorderRadius="45" BorderColor="{StaticResource PrimaryText}" BorderWidth="3" Image="ic_add_shopping_cart.png" WidthRequest="90" HeightRequest="90" BackgroundColor="{StaticResource Accent}" AbsoluteLayout.LayoutFlags="PositionProportional" AbsoluteLayout.LayoutBounds=".90,.97,90,90" />
-            <ContentView BackgroundColor="{StaticResource PrimaryDark}" x:Name="AddNewItem" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,1,1,0">
+            <ContentView BackgroundColor="{StaticResource PrimaryDark}" x:Name="AddNewMealItem" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds="0,1,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto" />
@@ -43,13 +43,11 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
                         </Image.GestureRecognizers>
                     </Image>
                     <Label TextColor="#ffffff" Text="Item" Grid.Row="1" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewItem" Placeholder="New Shopping Item" Grid.Row="1" Grid.Column="1" />
-                    <Label TextColor="#ffffff" Text="Description" Grid.Row="2" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewDescription" Placeholder="Description (Optional)" Grid.Row="2" Grid.Column="1" />
-                    <Label TextColor="#ffffff" Text="Quantity" Grid.Row="3" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewQuantity" Keyboard="Numeric" Placeholder="Quantity" Grid.Row="3" Grid.Column="1" />
-                    <Label TextColor="#ffffff" Text="Category" Grid.Row="4" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
-                    <Picker TextColor="#ffffff" x:Name="CategoryType" Title="Choose a category" Grid.Row="4" Grid.Column="1" />
+                    <Entry TextColor="#ffffff" PlaceholderColor="{StaticResource PrimaryText}" x:Name="NewItem" Placeholder="New Meal Item" Grid.Row="1" Grid.Column="1" />
+                    <Label TextColor="#ffffff" Text="Date" Grid.Row="2" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <DatePicker TextColor="#ffffff" x:Name="NewDate" Grid.Row="2" Grid.Column="1" />
+                    <Label TextColor="#ffffff" Text="Meal" Grid.Row="3" Grid.Column="0" VerticalTextAlignment="Center" Margin="5, 0" />
+                    <Picker TextColor="#ffffff" x:Name="MealTypes" Title="Choose a meal" Grid.Row="3" Grid.Column="1" />
                     <Button x:Name="AddItem" BackgroundColor="{StaticResource Accent}"
                         TextColor="{StaticResource AccentText}"
                         Text="Add"
