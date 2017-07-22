@@ -15,7 +15,7 @@ using System.Collections.ObjectModel;
 
 namespace shoppinglist.Services
 {
-	public class MealItemService : AzureService<MealItem>
+    public class MealItemService : AzureService<MealItem>, IRefreshableService
 	{
 		protected override IMobileServiceSyncTable<MealItem> Table
 		{
@@ -42,6 +42,11 @@ namespace shoppinglist.Services
 		protected override async Task CacheData()
 		{
             CacheData(await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync());
+		}
+
+		public async Task Refresh()
+		{
+			await GetMealItems();
 		}
 
 		public async Task<IEnumerable<MealItem>> GetMealItems()

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.MobileServices;
 using Microsoft.WindowsAzure.MobileServices.Sync;
@@ -14,6 +16,8 @@ namespace shoppinglist.Services
 {
     public abstract class AzureService<T>
     {
+        private Subject<bool> _isSyncing;
+        public IObservable<bool> IsSyncing { get; }
         protected SqlInitializer SqlInitializer { get; }
 
         protected DataCache Cache { get; }
@@ -25,6 +29,8 @@ namespace shoppinglist.Services
             Cache = Locator.Current.GetService<DataCache>();
             SqlInitializer = Locator.Current.GetService<SqlInitializer>();
             AllQueryName = allQueryName;
+            _isSyncing = new Subject<bool>();
+            IsSyncing = _isSyncing.StartWith(false);
         }
 
         protected abstract IMobileServiceSyncTable<T> Table { get; }
@@ -47,6 +53,7 @@ namespace shoppinglist.Services
 		{
 			try
 			{
+                _isSyncing.OnNext(true);
 				if (!CrossConnectivity.Current.IsConnected)
 					return;
 
@@ -58,6 +65,10 @@ namespace shoppinglist.Services
 			{
 				Debug.WriteLine("Unable to sync, that is alright as we have offline capabilities: " + ex);
 			}
+            finally
+            {
+                _isSyncing.OnNext(false);
+            }
 		}
 
 		public virtual async Task<IEnumerable<T>> GetItems(Expression<Func<T, bool>> clause)

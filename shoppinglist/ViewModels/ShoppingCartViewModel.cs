@@ -195,7 +195,9 @@ namespace shoppinglist.ViewModels
                 await ShoppingItemService.GetShoppingItems();
             });
 
-            _isRefreshing = Refresh.IsExecuting.ToProperty(this, x => x.IsRefreshing);
+			_isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, ShoppingItemService.IsSyncing)
+									  .Select(vals => vals.Any(x => x))
+									  .ToProperty(this, x => x.IsRefreshing);
 		}
 	}
 }

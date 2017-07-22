@@ -10,9 +10,7 @@ namespace shoppinglist
 {
     public partial class App : Application
     {
-        public static IObservable<IEnumerable<Category>> CategoryRefresh { get; private set; }
-        public static IObservable<IEnumerable<MealItem>> MealItemRefresh { get; private set; }
-        public static IObservable<IEnumerable<ShoppingItem>> ShoppingListRefresh { get; private set; }
+        private IDataRefresher DataRefresher { get; }
 
         public App()
         {
@@ -20,22 +18,22 @@ namespace shoppinglist
 
             Startup.Initialize();
 
-			var categoryService = Locator.Current.GetService<CategoryService>();
-			var itemsService = Locator.Current.GetService<ShoppingItemService>();
-            var mealItemService = Locator.Current.GetService<MealItemService>();
-            MealItemRefresh = Observable.FromAsync(mealItemService.GetMealItems);
-            CategoryRefresh = Observable.FromAsync(categoryService.GetCategories);
-            ShoppingListRefresh = Observable.FromAsync(itemsService.GetShoppingItems);
+            DataRefresher = Locator.Current.GetService<IDataRefresher>();
 
             MainPage = new MainPage();
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
             // Handle when your app starts
-            CategoryRefresh.Subscribe();
-            ShoppingListRefresh.Subscribe();
-            MealItemRefresh.Subscribe();
+            try
+            {
+                await DataRefresher.RefreshAll();
+            }
+            catch(Exception)
+            {
+                
+            }
         }
 
         protected override void OnSleep()
@@ -43,18 +41,17 @@ namespace shoppinglist
             // Handle when your app sleeps
         }
 
-        protected override void OnResume()
+        protected override async void OnResume()
         {
 			// Handle when your app resumes
-			var categoryService = Locator.Current.GetService<CategoryService>();
-			var itemsService = Locator.Current.GetService<ShoppingItemService>();
-            var mealItemService = Locator.Current.GetService<MealItemService>();
-            MealItemRefresh = Observable.FromAsync(mealItemService.GetMealItems);
-			CategoryRefresh = Observable.FromAsync(categoryService.GetCategories);
-			ShoppingListRefresh = Observable.FromAsync(itemsService.GetShoppingItems);
-			CategoryRefresh.Subscribe();
-			ShoppingListRefresh.Subscribe();
-            MealItemRefresh.Subscribe();
+			try
+			{
+				await DataRefresher.RefreshAll();
+			}
+			catch (Exception)
+			{
+
+			}
         }
     }
 }

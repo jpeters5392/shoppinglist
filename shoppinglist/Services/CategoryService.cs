@@ -15,7 +15,7 @@ using System.Collections.ObjectModel;
 
 namespace shoppinglist.Services
 {
-	public class CategoryService : AzureService<Category>
+    public class CategoryService : AzureService<Category>, IRefreshableService
 	{
 		protected override IMobileServiceSyncTable<Category> Table
 		{
@@ -42,6 +42,11 @@ namespace shoppinglist.Services
             {
                 Cache.Categories = value;
             }
+        }
+
+        public async Task Refresh()
+        {
+            await GetCategories();
         }
 
 		public async Task<IEnumerable<Category>> GetCategories()

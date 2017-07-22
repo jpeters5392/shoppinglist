@@ -112,7 +112,9 @@ namespace shoppinglist.ViewModels
                 await MealItemService.GetMealItems();
 			});
 
-            _isRefreshing = Refresh.IsExecuting.ToProperty(this, x => x.IsRefreshing);
+			_isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, MealItemService.IsSyncing)
+									  .Select(vals => vals.Any(x => x))
+									  .ToProperty(this, x => x.IsRefreshing);
 
 			OpenAddMealItemForm = ReactiveCommand.Create(() =>
 			{

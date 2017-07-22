@@ -15,6 +15,7 @@ namespace shoppinglist
             Locator.CurrentMutable.RegisterConstant(new CategoryService(), typeof(CategoryService));
             Locator.CurrentMutable.RegisterConstant(new MealItemService(), typeof(MealItemService));
             Locator.CurrentMutable.RegisterConstant(new ShoppingItemService(), typeof(ShoppingItemService));
+            Locator.CurrentMutable.RegisterConstant(new DataRefresher(), typeof(IDataRefresher));
         }
     }
 }
