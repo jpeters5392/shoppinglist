@@ -7,14 +7,16 @@ using shoppinglist.Services;
 using Splat;
 using System.Reactive.Linq;
 using shoppinglist.Cache;
+using System.Reactive;
+using System.Reactive.Disposables;
 
 namespace shoppinglist.ViewModels
 {
-    public class CategoriesViewModel : ReactiveObject
+    public class CategoriesViewModel : ReactiveObject, ISupportsActivation
     {
-        public ReactiveCommand AddCategory { get; }
+        public ReactiveCommand<Unit, string> AddCategory { get; }
 
-        public ReactiveCommand Refresh { get; }
+        public ReactiveCommand<Unit, Unit> Refresh { get; }
 
         private string _newCategoryName;
         public string NewCategoryName
@@ -35,33 +37,46 @@ namespace shoppinglist.ViewModels
 		private ObservableAsPropertyHelper<bool> _isRefreshing;
 		public bool IsRefreshing => _isRefreshing.Value;
 
+        public ViewModelActivator Activator => new ViewModelActivator();
+
         public CategoriesViewModel()
         {
             CategoryService = Locator.Current.GetService<CategoryService>();
             Cache = Locator.Current.GetService<DataCache>();
 
-            _categories = this.WhenAnyValue(x => x.Cache.Categories)
-                              .Select(categories => {
-                var vms = categories.Select(category => new CategoryViewModel(category));
-                return new ObservableCollection<CategoryViewModel>(vms);
-            })
-            .ToProperty(this, x => x.Categories);
-
-            AddCategory = ReactiveCommand.CreateFromTask(async () =>
+            this.WhenActivated(disposables =>
             {
-                var newCategory = await CategoryService.AddCategory(NewCategoryName);
+                _categories = this.WhenAnyValue(x => x.Cache.Categories)
+                              .Select(categories => {
+                                  var vms = categories.Select(category => new CategoryViewModel(category));
+                                  return new ObservableCollection<CategoryViewModel>(vms);
+                              })
+                                  .ToProperty(this, x => x.Categories)
+                                          .DisposeWith(disposables);
 
-                NewCategoryName = string.Empty;
+                AddCategory.InvokeCommand(this, x => x.CategoryService.AddCategoryItem)
+                                          .DisposeWith(disposables);
+
+                Refresh.InvokeCommand(this, x => x.CategoryService.Refresh)
+                                          .DisposeWith(disposables);
+
+                _isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, CategoryService.IsSyncing)
+                                          .Select(vals => vals.Any(x => x))
+                                          .ToProperty(this, x => x.IsRefreshing)
+                                          .DisposeWith(disposables);
             });
 
-            Refresh = ReactiveCommand.CreateFromTask(async () =>
-			{
-                await CategoryService.GetCategories();
-			});
+            AddCategory = ReactiveCommand.Create(() =>
+            {
+                var newCategoryName = NewCategoryName;
+                NewCategoryName = string.Empty;
+                return newCategoryName;
+            });
 
-            _isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, CategoryService.IsSyncing)
-                                      .Select(vals => vals.Any(x => x))
-                                      .ToProperty(this, x => x.IsRefreshing);
+            Refresh = ReactiveCommand.Create(() =>
+            {
+                return Unit.Default;
+            });
         }
     }
 }

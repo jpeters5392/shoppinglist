@@ -8,32 +8,34 @@ using Splat;
 using System.Reactive.Linq;
 using System.Collections.Generic;
 using shoppinglist.Cache;
+using System.Reactive.Disposables;
+using System.Reactive;
 
 namespace shoppinglist.ViewModels
 {
-	public class ShoppingCartViewModel : ReactiveObject
+    public class ShoppingCartViewModel : ReactiveObject, ISupportsActivation
     {
-        public ReactiveCommand AddShoppingItem { get; }
+        public ReactiveCommand<Unit, (string, string, string, double)> AddShoppingItem { get; }
 
-        public ReactiveCommand Refresh { get; }
+        public ReactiveCommand<Unit, long> Refresh { get; }
 
         public ReactiveCommand OpenAddForm { get; }
 
         public ReactiveCommand CloseAddForm { get; }
 
-		private readonly ObservableAsPropertyHelper<IEnumerable<ShoppingItem>> _rawShoppingItems;
+		private ObservableAsPropertyHelper<IEnumerable<ShoppingItem>> _rawShoppingItems;
 		public IEnumerable<ShoppingItem> RawShoppingItems => _rawShoppingItems.Value;
 
-		private readonly ObservableAsPropertyHelper<ObservableCollection<Category>> _rawCategories;
+		private ObservableAsPropertyHelper<ObservableCollection<Category>> _rawCategories;
         public ObservableCollection<Category> RawCategories => _rawCategories.Value;
 
-		private readonly ObservableAsPropertyHelper<ObservableCollection<ShoppingItemGroupViewModel>> _shoppingItems;
+		private ObservableAsPropertyHelper<ObservableCollection<ShoppingItemGroupViewModel>> _shoppingItems;
 		public ObservableCollection<ShoppingItemGroupViewModel> ShoppingItems
 		{
 			get => _shoppingItems.Value;
 		}
 
-        private readonly ObservableAsPropertyHelper<ObservableCollection<string>> _categories;
+        private ObservableAsPropertyHelper<ObservableCollection<string>> _categories;
 		public ObservableCollection<string> Categories
 		{
 			get => _categories.Value;
@@ -74,15 +76,8 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _shouldShowGrid, value);
 		}
 
-		private bool _isLoadingData;
-		public bool IsLoadingData
-		{
-			get => _isLoadingData;
-			set => this.RaiseAndSetIfChanged(ref _isLoadingData, value);
-		}
-
-        private ObservableAsPropertyHelper<bool> _isRefreshing;
-        public bool IsRefreshing => _isRefreshing.Value;
+        private ObservableAsPropertyHelper<bool> _isLoadingData;
+        public bool IsLoadingData => _isLoadingData.Value;
 
         private Dictionary<string, string> CategoryItemsByKey;
 
@@ -93,6 +88,8 @@ namespace shoppinglist.ViewModels
         private CategoryService CategoryService { get; set; }
 
         private DataCache Cache { get; }
+
+        public ViewModelActivator Activator => new ViewModelActivator();
 
         public ShoppingCartViewModel()
 		{
@@ -105,51 +102,64 @@ namespace shoppinglist.ViewModels
 
             ShouldShowGrid = false;
 
-            _rawShoppingItems = this.WhenAnyValue(x => x.Cache.ShoppingItems)
-                .ToProperty(this, x => x.RawShoppingItems);
+            this.WhenActivated(disposables =>
+            {
+                _rawShoppingItems = this.WhenAnyValue(x => x.Cache.ShoppingItems)
+                                        .ToProperty(this, x => x.RawShoppingItems)
+                                     .DisposeWith(disposables);
 
-            _rawCategories = this.WhenAnyValue(x => x.Cache.Categories)
-                              .ToProperty(this, x => x.RawCategories);
-            
-            _categories = this.WhenAnyValue(x => x.RawCategories)
-			.Select(categories =>
-			{
-                CategoryItemsByKey.Clear();
-                CategoryItemsByName.Clear();
-                return new ObservableCollection<string>(categories.Select(category => {
-                    CategoryItemsByKey.Add(category.Id, category.Name);
-                    CategoryItemsByName.Add(category.Name, category.Id);
-                    return category.Name;
-                }));
-			})
-			.ToProperty(this, x => x.Categories);
+                _rawCategories = this.WhenAnyValue(x => x.Cache.Categories)
+                                     .ToProperty(this, x => x.RawCategories)
+                                     .DisposeWith(disposables);
 
-            _shoppingItems = this.WhenAnyValue(x => x.RawShoppingItems, x => x.Categories)
-			.Select(results =>
-			{
-                if (results == null || results.Item1 == null || results.Item2 == null) return null;
-                var items = results.Item1;
-				var categories = Categories.ToList();
-				return new ObservableCollection<ShoppingItemGroupViewModel>(items.GroupBy(x => x.CategoryId).Select(x =>
-				{
-                    string categoryName = "";
-                    if (x.Key != null && CategoryItemsByKey.ContainsKey(x.Key))
+                _categories = this.WhenAnyValue(x => x.RawCategories)
+                .Select(categories =>
+                {
+                    CategoryItemsByKey.Clear();
+                    CategoryItemsByName.Clear();
+                    return new ObservableCollection<string>(categories.Select(category => {
+                        CategoryItemsByKey.Add(category.Id, category.Name);
+                        CategoryItemsByName.Add(category.Name, category.Id);
+                        return category.Name;
+                    }));
+                })
+                                  .ToProperty(this, x => x.Categories)
+                                     .DisposeWith(disposables);
+
+                _shoppingItems = this.WhenAnyValue(x => x.RawShoppingItems, x => x.Categories)
+                .Select(results =>
+                {
+                    if (results == null || results.Item1 == null || results.Item2 == null) return null;
+                    var items = results.Item1;
+                    var categories = Categories.ToList();
+                    return new ObservableCollection<ShoppingItemGroupViewModel>(items.GroupBy(x => x.CategoryId).Select(x =>
                     {
-                        categoryName = CategoryItemsByKey[x.Key];
-                    }
-                    else
-                    {
-                        categoryName = "None";
-                    }
+                        string categoryName = "";
+                        if (x.Key != null && CategoryItemsByKey.ContainsKey(x.Key))
+                        {
+                            categoryName = CategoryItemsByKey[x.Key];
+                        }
+                        else
+                        {
+                            categoryName = "None";
+                        }
 
-					var group = new ShoppingItemGroupViewModel(categoryName, string.Empty);
-					group.AddRange(x.Select(item => new ShoppingItemViewModel(item)));
-					return group;
-				}));
-			})
-			.ToProperty(this, x => x.ShoppingItems);
+                        var group = new ShoppingItemGroupViewModel(categoryName, string.Empty);
+                        group.AddRange(x.Select(item => new ShoppingItemViewModel(item)));
+                        return group;
+                    }));
+                })
+                .ToProperty(this, x => x.ShoppingItems)
+                                     .DisposeWith(disposables);
 
-            AddShoppingItem = ReactiveCommand.CreateFromTask(async () =>
+                _isLoadingData = ShoppingItemService.IsSyncing.ToProperty(this, x => x.IsLoadingData).DisposeWith(disposables);
+
+                Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.ShoppingItemService.Refresh).DisposeWith(disposables);
+
+                AddShoppingItem.InvokeCommand(this, x => x.ShoppingItemService.AddShoppingItem).DisposeWith(disposables);
+            });
+
+            AddShoppingItem = ReactiveCommand.Create<Unit, (string, string, string, double)>((_) =>
             {
                 ShouldShowGrid = false;
 
@@ -159,21 +169,14 @@ namespace shoppinglist.ViewModels
                     categoryId = CategoryItemsByName[Categories.ToList()[NewItemSelectedCategory]];
                 }
 
-                var newItem = await ShoppingItemService.AddShoppingItem(
-                    categoryId,
-                    NewItemName,
-                    NewItemDescription,
-                    NewQuantity
-                );
+                var newItem = (categoryId, NewItemName, NewItemDescription, NewQuantity);
 
                 NewItemName = string.Empty;
                 NewItemDescription = string.Empty;
                 NewItemSelectedCategory = -1;
                 NewQuantity = 0;
-            });
 
-            AddShoppingItem.IsExecuting.Subscribe(isExecuting => {
-                IsLoadingData = isExecuting;
+                return newItem;
             });
 
             OpenAddForm = ReactiveCommand.Create(() =>
@@ -190,14 +193,10 @@ namespace shoppinglist.ViewModels
                 ShouldShowGrid = false;
 			});
 
-            Refresh = ReactiveCommand.CreateFromTask(async () =>
+            Refresh = ReactiveCommand.Create<Unit, long>((_) =>
             {
-                await ShoppingItemService.GetShoppingItems();
+                return DateTime.Now.Ticks;
             });
-
-			_isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, ShoppingItemService.IsSyncing)
-									  .Select(vals => vals.Any(x => x))
-									  .ToProperty(this, x => x.IsRefreshing);
 		}
 	}
 }

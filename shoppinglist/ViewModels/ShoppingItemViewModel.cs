@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using ReactiveUI;
 using shoppinglist.Models;
 using shoppinglist.Services;
@@ -6,10 +9,10 @@ using Splat;
 
 namespace shoppinglist.ViewModels
 {
-	public class ShoppingItemViewModel : ReactiveObject
+    public class ShoppingItemViewModel : ReactiveObject, ISupportsActivation
 	{
-        public ReactiveCommand ItemSelected { get; }
-        public ReactiveCommand ItemDeleted { get; }
+        public ReactiveCommand<Unit, string> ItemSelected { get; }
+        public ReactiveCommand<Unit, string> ItemDeleted { get; }
 
 		private string _name;
 		public string Name
@@ -48,6 +51,8 @@ namespace shoppinglist.ViewModels
 
         private ShoppingItemService Service { get; }
 
+        public ViewModelActivator Activator => new ViewModelActivator();
+
 		public ShoppingItemViewModel(ShoppingItem item)
 		{
 			Name = item.Name;
@@ -58,22 +63,22 @@ namespace shoppinglist.ViewModels
 
             Service = Locator.Current.GetService<ShoppingItemService>();
 
-            ItemSelected = ReactiveCommand.CreateFromTask(async () =>
+            ItemSelected = ReactiveCommand.Create(() =>
             {
-                if (IsCompleted)
-                {
-                    await Service.UncompleteItem(Id);
-                }
-                else
-                {
-                    await Service.CompleteItem(Id);
-                }
+                return Id;
             });
 
-			ItemDeleted = ReactiveCommand.CreateFromTask(async () =>
+			ItemDeleted = ReactiveCommand.Create(() =>
 			{
-				await Service.DeleteItem(item);
+                return item.Id;
 			});
+
+            this.WhenActivated(disposables => {
+                ItemSelected.Where(_ => IsCompleted).InvokeCommand(this, x => x.Service.UncompleteItem).DisposeWith(disposables);
+                ItemSelected.Where(_ => !IsCompleted).InvokeCommand(this, x => x.Service.CompleteItem).DisposeWith(disposables);
+
+                ItemDeleted.InvokeCommand(this, x => x.Service.DeleteItem).DisposeWith(disposables);
+            });
 		}
 	}
 }

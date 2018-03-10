@@ -94,7 +94,7 @@ namespace shoppinglist
 
 				disposables(this.OneWayBind(
                     this.ViewModel,
-                    vm => vm.IsRefreshing,
+                    vm => vm.IsLoadingData,
                     v => v.ShoppingItems.IsRefreshing));
 			});
 

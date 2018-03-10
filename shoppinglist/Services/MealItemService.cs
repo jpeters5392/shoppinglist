@@ -12,11 +12,18 @@ using Splat;
 using shoppinglist.Models;
 using System.Linq;
 using System.Collections.ObjectModel;
+using ReactiveUI;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace shoppinglist.Services
 {
     public class MealItemService : AzureService<MealItem>, IRefreshableService
 	{
+        public ReactiveCommand<Unit, long> Refresh { get; }
+        public IObservable<IEnumerable<MealItem>> MealItems { get; }
+        public ReactiveCommand<(string name, DateTimeOffset date, MealType type), MealItem> AddMealItem { get; }
+
 		protected override IMobileServiceSyncTable<MealItem> Table
 		{
 			get
@@ -27,7 +34,36 @@ namespace shoppinglist.Services
 
 		public MealItemService() : base("allMealItems")
 		{
+            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<MealItem>>(async (_) =>
+            {
+                return await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync();
+            });
 
+            Disposables.Add(CacheData.InvokeCommand(this, x => x.CacheCollection));
+
+            MealItems = CacheCollection.Select(items => items.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).OrderBy(x => x.Name))
+                                           .Publish()
+                                           .RefCount();
+
+            Disposables.Add(MealItems.InvokeCommand(this, x => x.CacheCollection));
+
+            Refresh = ReactiveCommand.Create<Unit, long>(_ => DateTime.Now.Ticks);
+
+            Disposables.Add(Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.SyncItems));
+
+            AddMealItem = ReactiveCommand.Create<(string name, DateTimeOffset date, MealType type), MealItem>((args) =>
+            {
+                return new MealItem
+                {
+                    Name = args.name,
+                    Date = args.date,
+                    Type = args.type
+                };
+            });
+
+            Disposables.Add(AddMealItem.InvokeCommand(this, x => x.AddItem));
+
+            Disposables.Add(MealItems.InvokeCommand(this, x => x.CacheCollection));
 		}
 
 		protected override ObservableCollection<MealItem> CachedData
@@ -37,35 +73,6 @@ namespace shoppinglist.Services
 			{
                 Cache.MealItems = value;
 			}
-		}
-
-		protected override async Task CacheData()
-		{
-            CacheData(await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync());
-		}
-
-		public async Task Refresh()
-		{
-			await GetMealItems();
-		}
-
-		public async Task<IEnumerable<MealItem>> GetMealItems()
-		{
-            var items = await GetItems(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date);
-			CacheData(items.ToList());
-			return items.OrderBy(c => c.Name);
-		}
-
-		public async Task<MealItem> AddMealItem(string name, DateTimeOffset date, MealType type)
-		{
-			var item = new MealItem
-			{
-				Name = name,
-                Date = date,
-                Type = type
-			};
-
-			return await AddItem(item);
 		}
 	}
 }

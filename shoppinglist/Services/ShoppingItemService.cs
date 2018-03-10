@@ -12,11 +12,24 @@ using Splat;
 using shoppinglist.Models;
 using System.Linq;
 using System.Collections.ObjectModel;
+using ReactiveUI;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace shoppinglist.Services
 {
     public class ShoppingItemService: AzureService<ShoppingItem>, IRefreshableService
 	{
+        public ReactiveCommand<Unit, long> Refresh { get; }
+
+        public IObservable<IEnumerable<ShoppingItem>> ShoppingItems { get; }
+
+        public ReactiveCommand<(string categoryId, string name, string description, double quantity), ShoppingItem> AddShoppingItem { get; }
+
+        public ReactiveCommand<string, ShoppingItem> CompleteItem { get; }
+
+        public ReactiveCommand<string, ShoppingItem> UncompleteItem { get; }
+
         protected override IMobileServiceSyncTable<ShoppingItem> Table
         {
             get
@@ -27,7 +40,65 @@ namespace shoppinglist.Services
 
         public ShoppingItemService(): base("allShoppingItems")
         {
-            
+            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<ShoppingItem>>(async (_) =>
+            {
+                return await Table.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).ToListAsync();
+            });
+
+            Disposables.Add(CacheData.InvokeCommand(this, x => x.CacheCollection));
+
+            ShoppingItems = CacheCollection.Select(items => items.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).OrderBy(c => c.Name))
+                                           .Publish()
+                                           .RefCount();
+
+            Disposables.Add(ShoppingItems.InvokeCommand(this, x => x.CacheCollection));
+
+            Refresh = ReactiveCommand.Create<Unit, long>(_ => DateTime.Now.Ticks);
+
+            Disposables.Add(Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.SyncItems));
+
+            AddShoppingItem = ReactiveCommand.Create<(string categoryId, string name, string description, double quantity), ShoppingItem>((args) =>
+            {
+                return new ShoppingItem
+                {
+                    Name = args.name,
+                    Description = args.description,
+                    CategoryId = args.categoryId,
+                    Quantity = args.quantity
+                };
+            });
+
+            Disposables.Add(AddShoppingItem.InvokeCommand(this, x => x.AddItem));
+
+            CompleteItem = ReactiveCommand.CreateFromTask<string, ShoppingItem>(async itemId =>
+            {
+                await Initialize();
+                await PerformSync();
+
+                var item = await Table.LookupAsync(itemId);
+                item.CompletedOn = DateTime.Now;
+
+                await Table.UpdateAsync(item);
+
+                return item;
+            });
+
+            UncompleteItem = ReactiveCommand.CreateFromTask<string, ShoppingItem>(async itemId =>
+            {
+                await Initialize();
+                await PerformSync();
+
+                var item = await Table.LookupAsync(itemId);
+                item.CompletedOn = DateTime.MinValue;
+
+                await Table.UpdateAsync(item);
+
+                return item;
+            });
+
+            Disposables.Add(Observable.Merge(CompleteItem, UncompleteItem)
+                      .Select(_ => Unit.Default)
+                            .InvokeCommand(this, x => x.SyncItems));
         }
 
 		protected override ObservableCollection<ShoppingItem> CachedData
@@ -37,67 +108,6 @@ namespace shoppinglist.Services
 			{
 				Cache.ShoppingItems = value;
 			}
-		}
-
-		protected override async Task CacheData()
-		{
-			CacheData(await Table.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).ToListAsync());
-		}
-
-        public async Task Refresh()
-        {
-            await GetShoppingItems();
-        }
-
-		public async Task<IEnumerable<ShoppingItem>> GetShoppingItems()
-		{
-            var items = await GetItems(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24));
-            CacheData(items.ToList());
-
-			return items.OrderBy(c => c.Name);
-		}
-
-        public async Task<ShoppingItem> AddShoppingItem(string categoryId, string name, string description, double quantity)
-		{
-            var item = new ShoppingItem
-			{
-				Name = name,
-                Description = description,
-                CategoryId = categoryId,
-                Quantity = quantity
-			};
-
-            return await AddItem(item);
-		}
-
-		public async Task<ShoppingItem> CompleteItem(string itemId)
-		{
-			await Initialize();
-            await SyncItems();
-
-            var item = await Table.LookupAsync(itemId);
-            item.CompletedOn = DateTime.Now;
-
-            await Table.UpdateAsync(item);
-
-			await SyncItems();
-            await CacheData();
-			return item;
-		}
-
-		public async Task<ShoppingItem> UncompleteItem(string itemId)
-		{
-			await Initialize();
-			await SyncItems();
-
-			var item = await Table.LookupAsync(itemId);
-            item.CompletedOn = DateTime.MinValue;
-
-			await Table.UpdateAsync(item);
-
-			await SyncItems();
-            await CacheData();
-			return item;
 		}
 	}
 }

@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Reactive;
+using ReactiveUI;
 
 namespace shoppinglist.Services
 {
     public interface IRefreshableService
     {
-        Task Refresh();
+        ReactiveCommand<Unit, long> Refresh { get; }
     }
 }

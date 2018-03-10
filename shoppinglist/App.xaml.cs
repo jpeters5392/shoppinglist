@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Linq;
+using ReactiveUI;
 using shoppinglist.Models;
 using shoppinglist.Services;
 using Splat;
@@ -23,17 +25,10 @@ namespace shoppinglist
             MainPage = new MainPage();
         }
 
-        protected override async void OnStart()
+        protected override void OnStart()
         {
             // Handle when your app starts
-            try
-            {
-                await DataRefresher.RefreshAll();
-            }
-            catch(Exception)
-            {
-                
-            }
+            Observable.Return(Unit.Default).InvokeCommand(this, x => x.DataRefresher.RefreshAll);
         }
 
         protected override void OnSleep()
@@ -41,17 +36,10 @@ namespace shoppinglist
             // Handle when your app sleeps
         }
 
-        protected override async void OnResume()
+        protected override void OnResume()
         {
 			// Handle when your app resumes
-			try
-			{
-				await DataRefresher.RefreshAll();
-			}
-			catch (Exception)
-			{
-
-			}
+            Observable.Return(Unit.Default).InvokeCommand(this, x => x.DataRefresher.RefreshAll);
         }
     }
 }

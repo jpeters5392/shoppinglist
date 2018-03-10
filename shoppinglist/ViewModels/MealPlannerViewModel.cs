@@ -8,20 +8,22 @@ using shoppinglist.Cache;
 using shoppinglist.Models;
 using shoppinglist.Services;
 using Splat;
+using System.Reactive.Disposables;
+using System.Reactive;
 
 namespace shoppinglist.ViewModels
 {
-    public class MealPlannerViewModel : ReactiveObject
+    public class MealPlannerViewModel : ReactiveObject, ISupportsActivation
     {
-        public ReactiveCommand Refresh { get; }
+        public ReactiveCommand<Unit, long> Refresh { get; }
 
         public ReactiveCommand OpenAddMealItemForm { get; }
         public ReactiveCommand CloseAddMealItemForm { get; }
-        public ReactiveCommand AddMealItem { get; }
+        public ReactiveCommand<Unit, (string, DateTime, MealType)> AddMealItem { get; }
 
         private DateTimeOffset _todayDate;
 
-		private readonly ObservableAsPropertyHelper<ObservableCollection<MealItemGroupViewModel>> _mealItemGroups;
+		private ObservableAsPropertyHelper<ObservableCollection<MealItemGroupViewModel>> _mealItemGroups;
 		public ObservableCollection<MealItemGroupViewModel> MealItemGroups => _mealItemGroups.Value;
 
         private MealItemService MealItemService { get; }
@@ -43,12 +45,8 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _shouldShowGrid, value);
 		}
 
-		private bool _isLoadingData;
-		public bool IsLoadingData
-		{
-			get => _isLoadingData;
-			set => this.RaiseAndSetIfChanged(ref _isLoadingData, value);
-		}
+        private ObservableAsPropertyHelper<bool> _isLoadingData;
+        public bool IsLoadingData => _isLoadingData.Value;
 
 		private int _newItemSelectedMealType;
 		public int NewItemSelectedMealType
@@ -71,6 +69,8 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _newItemDate, value);
 		}
 
+        public ViewModelActivator Activator => new ViewModelActivator();
+
         public MealPlannerViewModel()
         {
             MealItemService = Locator.Current.GetService<MealItemService>();
@@ -84,37 +84,48 @@ namespace shoppinglist.ViewModels
             NewItemSelectedMealType = 2;
             NewItemDate = DateTime.Now;
 
-            _mealItemGroups = this.WhenAnyValue(x => x.Cache.MealItems)
+            this.WhenActivated(disposables => {
+                _mealItemGroups = this.WhenAnyValue(x => x.Cache.MealItems)
                                   .Select(mealItems =>
-            {
-                var todayItemGroup = BuildMealItemGroup("Today", mealItems.Where(x => x.Date.Date == DateTime.Now.Date));
-                var todayPlusOneItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(1).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(1).Date));
-                var todayPlusTwoItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(2).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(2).Date));
-                var todayPlusThreeItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(3).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(3).Date));
-                var todayPlusFourItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(4).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(4).Date));
-                var todayPlusFiveItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(5).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(5).Date));
-                var todayPlusSixItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(6).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(6).Date));
+                                  {
+                                      var todayItemGroup = BuildMealItemGroup("Today", mealItems.Where(x => x.Date.Date == DateTime.Now.Date));
+                                      var todayPlusOneItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(1).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(1).Date));
+                                      var todayPlusTwoItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(2).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(2).Date));
+                                      var todayPlusThreeItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(3).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(3).Date));
+                                      var todayPlusFourItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(4).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(4).Date));
+                                      var todayPlusFiveItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(5).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(5).Date));
+                                      var todayPlusSixItemGroup = BuildMealItemGroup(FormatDate(_todayDate.AddDays(6).ToLocalTime()), mealItems.Where(x => x.Date.Date == DateTime.Now.AddDays(6).Date));
 
-                var groups = new List<MealItemGroupViewModel>();
-                groups.Add(todayItemGroup);
-                groups.Add(todayPlusOneItemGroup);
-                groups.Add(todayPlusTwoItemGroup);
-                groups.Add(todayPlusThreeItemGroup);
-                groups.Add(todayPlusFourItemGroup);
-                groups.Add(todayPlusFiveItemGroup);
-                groups.Add(todayPlusSixItemGroup);
+                                      var groups = new List<MealItemGroupViewModel>();
+                                      groups.Add(todayItemGroup);
+                                      groups.Add(todayPlusOneItemGroup);
+                                      groups.Add(todayPlusTwoItemGroup);
+                                      groups.Add(todayPlusThreeItemGroup);
+                                      groups.Add(todayPlusFourItemGroup);
+                                      groups.Add(todayPlusFiveItemGroup);
+                                      groups.Add(todayPlusSixItemGroup);
 
-                return new ObservableCollection<MealItemGroupViewModel>(groups);
-            }).ToProperty(this, x => x.MealItemGroups);
+                                      return new ObservableCollection<MealItemGroupViewModel>(groups);
+                                  })
+                                      .ToProperty(this, x => x.MealItemGroups)
+                                      .DisposeWith(disposables);
 
-			Refresh = ReactiveCommand.CreateFromTask(async () =>
+                Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.MealItemService.Refresh).DisposeWith(disposables);
+
+                _isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, MealItemService.IsSyncing)
+                                      .Select(vals => vals.Any(x => x))
+                                      .ToProperty(this, x => x.IsRefreshing)
+                                          .DisposeWith(disposables);
+
+                _isLoadingData = MealItemService.IsSyncing.ToProperty(this, x => x.IsLoadingData).DisposeWith(disposables);
+
+                AddMealItem.Select(x => x).InvokeCommand(this, x => x.MealItemService.AddMealItem).DisposeWith(disposables);
+            });
+
+			Refresh = ReactiveCommand.Create<Unit, long>((_) =>
 			{
-                await MealItemService.GetMealItems();
+                return DateTime.Now.Ticks;
 			});
-
-			_isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, MealItemService.IsSyncing)
-									  .Select(vals => vals.Any(x => x))
-									  .ToProperty(this, x => x.IsRefreshing);
 
 			OpenAddMealItemForm = ReactiveCommand.Create(() =>
 			{
@@ -126,26 +137,19 @@ namespace shoppinglist.ViewModels
 				ShouldShowGrid = false;
 			});
 
-			AddMealItem = ReactiveCommand.CreateFromTask(async () =>
+			AddMealItem = ReactiveCommand.Create<Unit, (string, DateTime, MealType)>((_) =>
 			{
 				ShouldShowGrid = false;
 
                 var mealItemType = (MealType)Enum.Parse(typeof(MealType), MealTypes[NewItemSelectedMealType]);
 
-                var newItem = await MealItemService.AddMealItem(
-					NewItemName,
-					NewItemDate,
-					mealItemType
-				);
+                var newMealItem = (NewItemName, NewItemDate, mealItemType);
 
-				NewItemName = string.Empty;
+                NewItemName = string.Empty;
                 NewItemDate = DateTime.Now;
-				NewItemSelectedMealType = 2;
-			});
+                NewItemSelectedMealType = 2;
 
-			AddMealItem.IsExecuting.Subscribe(isExecuting =>
-			{
-				IsLoadingData = isExecuting;
+                return newMealItem;
 			});
         }
 
