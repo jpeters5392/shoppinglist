@@ -15,6 +15,7 @@ using System.Collections.ObjectModel;
 using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reactive.Disposables;
 
 namespace shoppinglist.Services
 {
@@ -39,17 +40,32 @@ namespace shoppinglist.Services
                 return await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync();
             });
 
-            Disposables.Add(CacheData.InvokeCommand(this, x => x.CacheCollection));
+            CacheData.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
+            }).DisposeWith(Disposables);
+
+            InitCommands();
+
+            CacheData.Do(_ => Debug.WriteLine("Caching meal items"))
+                     .InvokeCommand(this, x => x.CacheCollection)
+                     .DisposeWith(Disposables);
 
             MealItems = CacheCollection.Select(items => items.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).OrderBy(x => x.Name))
                                            .Publish()
                                            .RefCount();
 
-            Disposables.Add(MealItems.InvokeCommand(this, x => x.CacheCollection));
-
             Refresh = ReactiveCommand.Create<Unit, long>(_ => DateTime.Now.Ticks);
 
-            Disposables.Add(Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.SyncItems));
+            Refresh.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to Refresh: {ex.Message}");
+            }).DisposeWith(Disposables);
+
+            Refresh.Select(_ => Unit.Default)
+                   .Do(_ => Debug.WriteLine("Syncing meal items"))
+                   .InvokeCommand(this, x => x.SyncItems)
+                   .DisposeWith(Disposables);
 
             AddMealItem = ReactiveCommand.Create<(string name, DateTimeOffset date, MealType type), MealItem>((args) =>
             {
@@ -61,9 +77,14 @@ namespace shoppinglist.Services
                 };
             });
 
-            Disposables.Add(AddMealItem.InvokeCommand(this, x => x.AddItem));
+            AddMealItem.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to AddMealItem: {ex.Message}");
+            }).DisposeWith(Disposables);
 
-            Disposables.Add(MealItems.InvokeCommand(this, x => x.CacheCollection));
+            AddMealItem.Do(_ => Debug.WriteLine("Adding meal item"))
+                       .InvokeCommand(this, x => x.AddItem)
+                       .DisposeWith(Disposables);
 		}
 
 		protected override ObservableCollection<MealItem> CachedData

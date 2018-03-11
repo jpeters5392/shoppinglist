@@ -18,7 +18,7 @@ namespace shoppinglist.Services
 
         public ReactiveCommand<Unit, long> RefreshAll { get; }
 
-        private CompositeDisposable Disposables { get; }
+        private CompositeDisposable Disposables { get; } = new CompositeDisposable();
 
         public DataRefresher()
         {

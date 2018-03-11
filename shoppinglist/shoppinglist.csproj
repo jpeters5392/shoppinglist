@@ -107,6 +107,7 @@
     <Compile Include="Services\DataRefresher.cs" />
     <Compile Include="Services\IDataRefresher.cs" />
     <Compile Include="Controls\Fab.cs" />
+    <Compile Include="LifecycleLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Xamarin.Forms.Core">

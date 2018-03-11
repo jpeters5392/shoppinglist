@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using shoppinglist.Cache;
 using System.Reactive.Disposables;
 using System.Reactive;
+using System.Diagnostics;
 
 namespace shoppinglist.ViewModels
 {
@@ -89,7 +90,12 @@ namespace shoppinglist.ViewModels
 
         private DataCache Cache { get; }
 
-        public ViewModelActivator Activator => new ViewModelActivator();
+        private readonly ViewModelActivator _viewModelActivator = new ViewModelActivator();
+
+        public ViewModelActivator Activator
+        {
+            get { return _viewModelActivator; }
+        }
 
         public ShoppingCartViewModel()
 		{
@@ -104,27 +110,33 @@ namespace shoppinglist.ViewModels
 
             this.WhenActivated(disposables =>
             {
+                var lifecycle = new LifecycleLogger(GetType());
+                lifecycle.DisposeWith(disposables);
+
                 _rawShoppingItems = this.WhenAnyValue(x => x.Cache.ShoppingItems)
                                         .ToProperty(this, x => x.RawShoppingItems)
-                                     .DisposeWith(disposables);
+                                        .DisposeWith(disposables);
 
                 _rawCategories = this.WhenAnyValue(x => x.Cache.Categories)
                                      .ToProperty(this, x => x.RawCategories)
                                      .DisposeWith(disposables);
 
                 _categories = this.WhenAnyValue(x => x.RawCategories)
-                .Select(categories =>
-                {
-                    CategoryItemsByKey.Clear();
-                    CategoryItemsByName.Clear();
-                    return new ObservableCollection<string>(categories.Select(category => {
-                        CategoryItemsByKey.Add(category.Id, category.Name);
-                        CategoryItemsByName.Add(category.Name, category.Id);
-                        return category.Name;
-                    }));
-                })
+                                    .Select(categories =>
+                                    {
+                                        CategoryItemsByKey.Clear();
+                                        CategoryItemsByName.Clear();
+
+                                        if (categories == null) return new ObservableCollection<string>();
+
+                                        return new ObservableCollection<string>(categories.Select(category => {
+                                            CategoryItemsByKey.Add(category.Id, category.Name);
+                                            CategoryItemsByName.Add(category.Name, category.Id);
+                                            return category.Name;
+                                        }));
+                                    })
                                   .ToProperty(this, x => x.Categories)
-                                     .DisposeWith(disposables);
+                                  .DisposeWith(disposables);
 
                 _shoppingItems = this.WhenAnyValue(x => x.RawShoppingItems, x => x.Categories)
                 .Select(results =>
@@ -150,11 +162,15 @@ namespace shoppinglist.ViewModels
                     }));
                 })
                 .ToProperty(this, x => x.ShoppingItems)
-                                     .DisposeWith(disposables);
+                .DisposeWith(disposables);
 
-                _isLoadingData = ShoppingItemService.IsSyncing.ToProperty(this, x => x.IsLoadingData).DisposeWith(disposables);
+                _isLoadingData = ShoppingItemService.IsSyncing.StartWith(false).ToProperty(this, x => x.IsLoadingData).DisposeWith(disposables);
 
-                Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.ShoppingItemService.Refresh).DisposeWith(disposables);
+                Refresh.Select(_ => Unit.Default)
+                       .Do(_ => {
+                           Debug.WriteLine("Performing Refresh command");
+                        })
+                       .InvokeCommand(this, x => x.ShoppingItemService.Refresh).DisposeWith(disposables);
 
                 AddShoppingItem.InvokeCommand(this, x => x.ShoppingItemService.AddShoppingItem).DisposeWith(disposables);
             });

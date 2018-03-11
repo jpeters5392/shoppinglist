@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Linq;
 using ReactiveUI;
 using ReactiveUI.XamForms;
 using shoppinglist.ViewModels;
@@ -82,11 +84,6 @@ namespace shoppinglist
 					vm => vm.AddMealItem,
 					v => v.AddItem,
 					nameof(this.AddItem.Clicked)));
-
-				disposables(this.Bind(
-					this.ViewModel,
-					vm => vm.IsLoadingData,
-					v => v.ProgressIndicator.IsRunning));
             });
 
 			this.MealItems.ItemSelected += (sender, e) =>

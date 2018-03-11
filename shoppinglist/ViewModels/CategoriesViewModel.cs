@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using shoppinglist.Cache;
 using System.Reactive;
 using System.Reactive.Disposables;
+using System.Diagnostics;
 
 namespace shoppinglist.ViewModels
 {
@@ -37,7 +38,12 @@ namespace shoppinglist.ViewModels
 		private ObservableAsPropertyHelper<bool> _isRefreshing;
 		public bool IsRefreshing => _isRefreshing.Value;
 
-        public ViewModelActivator Activator => new ViewModelActivator();
+        private readonly ViewModelActivator _viewModelActivator = new ViewModelActivator();
+
+        public ViewModelActivator Activator
+        {
+            get { return _viewModelActivator; }
+        }
 
         public CategoriesViewModel()
         {
@@ -46,19 +52,26 @@ namespace shoppinglist.ViewModels
 
             this.WhenActivated(disposables =>
             {
+                var lifecycle = new LifecycleLogger(GetType());
+                lifecycle.DisposeWith(disposables);
+
                 _categories = this.WhenAnyValue(x => x.Cache.Categories)
-                              .Select(categories => {
-                                  var vms = categories.Select(category => new CategoryViewModel(category));
-                                  return new ObservableCollection<CategoryViewModel>(vms);
-                              })
+                                  .Select(categories => {
+                                      var vms = categories.Select(category => new CategoryViewModel(category));
+                                      return new ObservableCollection<CategoryViewModel>(vms);
+                                  })
                                   .ToProperty(this, x => x.Categories)
-                                          .DisposeWith(disposables);
+                                  .DisposeWith(disposables);
 
-                AddCategory.InvokeCommand(this, x => x.CategoryService.AddCategoryItem)
-                                          .DisposeWith(disposables);
+                AddCategory.Select(category => category)
+                           .Do(_ => Debug.WriteLine("Adding category item"))
+                           .InvokeCommand(this, x => x.CategoryService.AddCategoryItem)
+                           .DisposeWith(disposables);
 
-                Refresh.InvokeCommand(this, x => x.CategoryService.Refresh)
-                                          .DisposeWith(disposables);
+                Refresh.Select(_ => Unit.Default)
+                       .Do(_ => Debug.WriteLine("Refreshing category items"))
+                       .InvokeCommand(this, x => x.CategoryService.Refresh)
+                       .DisposeWith(disposables);
 
                 _isRefreshing = Observable.CombineLatest(Refresh.IsExecuting, CategoryService.IsSyncing)
                                           .Select(vals => vals.Any(x => x))

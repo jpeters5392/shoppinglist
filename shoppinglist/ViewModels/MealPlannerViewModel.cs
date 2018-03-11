@@ -19,7 +19,7 @@ namespace shoppinglist.ViewModels
 
         public ReactiveCommand OpenAddMealItemForm { get; }
         public ReactiveCommand CloseAddMealItemForm { get; }
-        public ReactiveCommand<Unit, (string, DateTime, MealType)> AddMealItem { get; }
+        public ReactiveCommand<Unit, (string, DateTimeOffset, MealType)> AddMealItem { get; }
 
         private DateTimeOffset _todayDate;
 
@@ -69,7 +69,12 @@ namespace shoppinglist.ViewModels
 			set => this.RaiseAndSetIfChanged(ref _newItemDate, value);
 		}
 
-        public ViewModelActivator Activator => new ViewModelActivator();
+        private readonly ViewModelActivator _viewModelActivator = new ViewModelActivator();
+
+        public ViewModelActivator Activator
+        {
+            get { return _viewModelActivator; }
+        }
 
         public MealPlannerViewModel()
         {
@@ -137,13 +142,13 @@ namespace shoppinglist.ViewModels
 				ShouldShowGrid = false;
 			});
 
-			AddMealItem = ReactiveCommand.Create<Unit, (string, DateTime, MealType)>((_) =>
+			AddMealItem = ReactiveCommand.Create<Unit, (string, DateTimeOffset, MealType)>((_) =>
 			{
 				ShouldShowGrid = false;
 
                 var mealItemType = (MealType)Enum.Parse(typeof(MealType), MealTypes[NewItemSelectedMealType]);
 
-                var newMealItem = (NewItemName, NewItemDate, mealItemType);
+                var newMealItem = (NewItemName, new DateTimeOffset(NewItemDate), mealItemType);
 
                 NewItemName = string.Empty;
                 NewItemDate = DateTime.Now;

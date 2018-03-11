@@ -15,6 +15,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using ReactiveUI;
 using System.Reactive.Linq;
+using System.Reactive.Disposables;
 
 namespace shoppinglist.Services
 {
@@ -39,17 +40,32 @@ namespace shoppinglist.Services
                 return await Table.ToListAsync();
             });
 
-            Disposables.Add(CacheData.InvokeCommand(this, x => x.CacheCollection));
+            CacheData.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
+            }).DisposeWith(Disposables);
+
+            InitCommands();
+
+            CacheData.Do(_ => Debug.WriteLine("Caching category items"))
+                     .InvokeCommand(this, x => x.CacheCollection)
+                     .DisposeWith(Disposables);
 
             CategoryItems = CacheCollection.Select(items => items.Where(x => true).OrderBy(x => x.Name))
+                                           .Do(_ => Debug.WriteLine("Updated collection of categories"))
                                            .Publish()
                                            .RefCount();
 
-            Disposables.Add(CategoryItems.InvokeCommand(this, x => x.CacheCollection));
-
             Refresh = ReactiveCommand.Create<Unit, long>(_ => DateTime.Now.Ticks);
 
-            Disposables.Add(Refresh.Select(_ => Unit.Default).InvokeCommand(this, x => x.SyncItems));
+            Refresh.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to Refresh: {ex.Message}");
+            }).DisposeWith(Disposables);
+
+            Refresh.Select(_ => Unit.Default)
+                   .Do(_ => Debug.WriteLine("Syncing category items"))
+                   .InvokeCommand(this, x => x.SyncItems).DisposeWith(Disposables);
 
             AddCategoryItem = ReactiveCommand.Create<string, Category>(name =>
             {
@@ -59,9 +75,14 @@ namespace shoppinglist.Services
                 };
             });
 
-            Disposables.Add(AddCategoryItem.InvokeCommand(this, x => x.AddItem));
+            AddCategoryItem.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to AddCategoryItem: {ex.Message}");
+            }).DisposeWith(Disposables);
 
-            Disposables.Add(CategoryItems.InvokeCommand(this, x => x.CacheCollection));
+            AddCategoryItem.Do(_ => Debug.WriteLine("Adding category item to database"))
+                           .InvokeCommand(this, x => x.AddItem)
+                           .DisposeWith(Disposables);
 		}
 
         protected override ObservableCollection<Category> CachedData

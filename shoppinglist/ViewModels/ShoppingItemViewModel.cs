@@ -51,7 +51,12 @@ namespace shoppinglist.ViewModels
 
         private ShoppingItemService Service { get; }
 
-        public ViewModelActivator Activator => new ViewModelActivator();
+        private readonly ViewModelActivator _viewModelActivator = new ViewModelActivator();
+
+        public ViewModelActivator Activator
+        {
+            get { return _viewModelActivator; }
+        }
 
 		public ShoppingItemViewModel(ShoppingItem item)
 		{

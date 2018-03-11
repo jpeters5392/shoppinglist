@@ -15,6 +15,8 @@ namespace shoppinglist
 
 			this.WhenActivated(disposables =>
 			{
+                disposables(new LifecycleLogger(GetType()));
+
 				disposables(this.OneWayBind(
 					this.ViewModel,
                     vm => vm.ShoppingItems,
@@ -45,11 +47,6 @@ namespace shoppinglist
                     vm => vm.NewItemSelectedCategory,
                     v => v.CategoryType.SelectedIndex));
 
-				disposables(this.Bind(
-                    this.ViewModel,
-					vm => vm.IsLoadingData,
-                    v => v.ProgressIndicator.IsVisible));
-
                 disposables(this.WhenAnyValue(x => x.ViewModel.ShouldShowGrid)
                     .Subscribe(shouldShowGrid => {
 	                    if (shouldShowGrid)
@@ -63,11 +60,6 @@ namespace shoppinglist
 							this.AddNewItem.LayoutTo(bounds);
 	                    }
                 }));
-
-				disposables(this.Bind(
-					this.ViewModel,
-                    vm => vm.IsLoadingData,
-                    v => v.ProgressIndicator.IsRunning));
 
 				disposables(this.BindCommand(
 					this.ViewModel,

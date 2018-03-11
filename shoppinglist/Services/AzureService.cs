@@ -26,35 +26,62 @@ namespace shoppinglist.Services
 
     public abstract class AzureService<T> : IDisposable
     {
-        public IObservable<bool> IsSyncing { get; }
+        public IObservable<bool> IsSyncing { get; set; }
         protected SqlInitializer SqlInitializer { get; }
 
-        protected ReactiveCommand<Unit, SyncStatus> SyncItems { get; }
+        protected ReactiveCommand<Unit, SyncStatus> SyncItems { get; set; }
 
         protected DataCache Cache { get; }
 
         private string AllQueryName { get; }
 
-        protected CompositeDisposable Disposables { get; }
+        protected CompositeDisposable Disposables { get; } = new CompositeDisposable();
+
+        protected abstract IMobileServiceSyncTable<T> Table { get; }
+
+        protected abstract ObservableCollection<T> CachedData { get; set; }
+
+        protected ReactiveCommand<Unit, IEnumerable<T>> CacheData { get; set; }
+
+        protected ReactiveCommand<IList<T>, IList<T>> CacheCollection { get; set; }
+
+        public ReactiveCommand<T, T> AddItem { get; protected set; }
+
+        public ReactiveCommand<T, T> UpdateItem { get; protected set; }
+
+        public ReactiveCommand<T, T> DeleteItem { get; protected set; }
 
         public AzureService(string allQueryName)
         {
             Cache = Locator.Current.GetService<DataCache>();
             SqlInitializer = Locator.Current.GetService<SqlInitializer>();
             AllQueryName = allQueryName;
+        }
 
+        protected void InitCommands()
+        {
             SyncItems = ReactiveCommand.CreateFromTask<Unit, SyncStatus>(async (_) =>
             {
                 return await PerformSync();
             });
 
-            IsSyncing = SyncItems.IsExecuting.Publish().RefCount();
+            SyncItems.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to SyncItems: {ex.Message}");
+            }).DisposeWith(Disposables);
+
+            IsSyncing = SyncItems.IsExecuting.StartWith(false).Publish().RefCount();
 
             CacheCollection = ReactiveCommand.Create<IList<T>, IList<T>>(data =>
             {
                 CachedData = new ObservableCollection<T>(data);
                 return data;
             });
+
+            CacheCollection.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to CacheCollection: {ex.Message}");
+            }).DisposeWith(Disposables);
 
             AddItem = ReactiveCommand.CreateFromTask<T, T>(async item =>
             {
@@ -65,6 +92,11 @@ namespace shoppinglist.Services
                 return item;
             });
 
+            AddItem.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to AddItem: {ex.Message}");
+            }).DisposeWith(Disposables);
+
             UpdateItem = ReactiveCommand.CreateFromTask<T, T>(async item =>
             {
                 await Initialize();
@@ -73,6 +105,11 @@ namespace shoppinglist.Services
 
                 return item;
             });
+
+            UpdateItem.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to UpdateItem: {ex.Message}");
+            }).DisposeWith(Disposables);
 
             DeleteItem = ReactiveCommand.CreateFromTask<T, T>(async item =>
             {
@@ -83,16 +120,27 @@ namespace shoppinglist.Services
                 return item;
             });
 
-            Disposables.Add(Observable.Merge(AddItem, UpdateItem, DeleteItem)
-                      .Select(_ => Unit.Default)
-                            .InvokeCommand(this, x => x.SyncItems));
+            DeleteItem.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to DeleteItem: {ex.Message}");
+            }).DisposeWith(Disposables);
 
-            Disposables.Add(SyncItems.Where(x => x == SyncStatus.Synchronized).Select(_ => Unit.Default)
-                            .InvokeCommand(this, x => x.CacheData));
+            Observable.Merge(AddItem, UpdateItem, DeleteItem)
+                      .Select(_ => Unit.Default)
+                      .Do(_ => Debug.WriteLine("Syncing after changing items"))
+                      .InvokeCommand(this, x => x.SyncItems)
+                      .DisposeWith(Disposables);
+
+            SyncItems.Where(x => x == SyncStatus.Synchronized)
+                     .Select(_ => Unit.Default)
+                     .Do(_ => Debug.WriteLine("Caching sync'd items"))
+                     .InvokeCommand(this, x => x.CacheData)
+                     .DisposeWith(Disposables);
         }
 
         public virtual void Dispose()
         {
+            Debug.WriteLine("Disposing");
             Disposables.Dispose();
         }
 
@@ -101,24 +149,15 @@ namespace shoppinglist.Services
             return SqlInitializer.Initialize();
         }
 
-        protected abstract IMobileServiceSyncTable<T> Table { get; }
-
-        protected abstract ObservableCollection<T> CachedData { get; set; }
-
-        protected ReactiveCommand<Unit, IEnumerable<T>> CacheData { get; set; }
-
-        protected ReactiveCommand<IList<T>, IList<T>> CacheCollection { get; }
-
-        public ReactiveCommand<T, T> AddItem { get; protected set; }
-
-        public ReactiveCommand<T, T> UpdateItem { get; protected set; }
-
-        public ReactiveCommand<T, T> DeleteItem { get; protected set; }
-
         protected async Task<SyncStatus> PerformSync()
         {
             try
             {
+                if (Table == null)
+                {
+                    await Initialize();    
+                }
+
                 if (!CrossConnectivity.Current.IsConnected)
                     return SyncStatus.Skipped;
 

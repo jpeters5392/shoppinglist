@@ -61,7 +61,6 @@ xmlns:reactive="clr-namespace:ReactiveUI.XamForms;assembly=ReactiveUI.XamForms">
                         Margin="0,0,0,15"/>
                 </Grid>
             </ContentView>
-            <ActivityIndicator x:Name="ProgressIndicator" AbsoluteLayout.LayoutFlags="All" AbsoluteLayout.LayoutBounds=".5,.5,.5,.5" />
         </AbsoluteLayout>
     </reactive:ReactiveContentPage.Content>
 </reactive:ReactiveContentPage>

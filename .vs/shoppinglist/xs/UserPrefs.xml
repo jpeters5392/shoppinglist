@@ -1,10 +1,17 @@
 ﻿<Properties StartupConfiguration="{5F765C75-0A7E-47B3-8370-28EB91185EB4}|Default">
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="shoppinglist/Services/ShoppingItemService.cs">
+    <Files>
+      <File FileName="shoppinglist/Services/AzureService.cs" Line="166" Column="60" />
+      <File FileName="shoppinglist/Services/CategoryService.cs" Line="72" Column="1" />
+      <File FileName="shoppinglist/Services/MealItemService.cs" Line="40" Column="1" />
+      <File FileName="shoppinglist/Services/ShoppingItemService.cs" Line="149" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.ItemProperties.shoppinglist.Droid PreferredExecutionTarget="Android.Android_Accelerated_x86" />
+  <MonoDevelop.Ide.ItemProperties.shoppinglist.Droid PreferredExecutionTarget="Android.Nexus_6_API_23" />
   <MultiItemStartupConfigurations />
 </Properties>

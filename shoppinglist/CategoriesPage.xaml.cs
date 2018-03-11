@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ReactiveUI.XamForms;
 using ReactiveUI;
 using shoppinglist.ViewModels;
+using System.Reactive.Disposables;
 
 namespace shoppinglist
 {
@@ -13,6 +14,8 @@ namespace shoppinglist
             InitializeComponent();
 
             this.WhenActivated(disposables => {
+                disposables(new LifecycleLogger(GetType()));
+
                 disposables(this.OneWayBind(
                     this.ViewModel,
                     vm => vm.Categories,
