@@ -51,7 +51,7 @@ namespace shoppinglist.Services
                      .InvokeCommand(this, x => x.CacheCollection)
                      .DisposeWith(Disposables);
 
-            CategoryItems = CacheCollection.Select(items => items.Where(x => true).OrderBy(x => x.Name))
+            CategoryItems = CacheCollection.Select(items => items.Where(x => !string.IsNullOrWhiteSpace(x.Name)).OrderBy(x => x.Name))
                                            .Do(_ => Debug.WriteLine("Updated collection of categories"))
                                            .Publish()
                                            .RefCount();

@@ -124,7 +124,16 @@ namespace shoppinglist.ViewModels
 
                 _isLoadingData = MealItemService.IsSyncing.ToProperty(this, x => x.IsLoadingData).DisposeWith(disposables);
 
-                AddMealItem.Select(x => x).InvokeCommand(this, x => x.MealItemService.AddMealItem).DisposeWith(disposables);
+                AddMealItem.Where(x => !string.IsNullOrWhiteSpace(x.Item1))
+                           .Select(x => x)
+                           .InvokeCommand(this, x => x.MealItemService.AddMealItem)
+                           .DisposeWith(disposables);
+
+                AddMealItem.Where(x => string.IsNullOrWhiteSpace(x.Item1))
+                           .Subscribe(async _ => {
+                               await App.Instance.MainPage.DisplayAlert("Error", "You must enter a name", "OK");
+                           })
+                           .DisposeWith(disposables);
             });
 
 			Refresh = ReactiveCommand.Create<Unit, long>((_) =>

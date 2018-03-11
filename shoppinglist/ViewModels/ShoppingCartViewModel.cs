@@ -129,7 +129,8 @@ namespace shoppinglist.ViewModels
 
                                         if (categories == null) return new ObservableCollection<string>();
 
-                                        return new ObservableCollection<string>(categories.Select(category => {
+                    return new ObservableCollection<string>(categories.Where(category => !string.IsNullOrWhiteSpace(category.Name))
+                                                            .Select(category => {
                                             CategoryItemsByKey.Add(category.Id, category.Name);
                                             CategoryItemsByName.Add(category.Name, category.Id);
                                             return category.Name;
@@ -172,7 +173,15 @@ namespace shoppinglist.ViewModels
                         })
                        .InvokeCommand(this, x => x.ShoppingItemService.Refresh).DisposeWith(disposables);
 
-                AddShoppingItem.InvokeCommand(this, x => x.ShoppingItemService.AddShoppingItem).DisposeWith(disposables);
+                AddShoppingItem.Where(x => !string.IsNullOrWhiteSpace(x.Item2))
+                               .InvokeCommand(this, x => x.ShoppingItemService.AddShoppingItem)
+                               .DisposeWith(disposables);
+
+                AddShoppingItem.Where(x => string.IsNullOrWhiteSpace(x.Item2))
+                               .Subscribe(async _ => {
+                                   await App.Instance.MainPage.DisplayAlert("Error", "You must supply a name", "OK");
+                               })
+                               .DisposeWith(disposables);
             });
 
             AddShoppingItem = ReactiveCommand.Create<Unit, (string, string, string, double)>((_) =>

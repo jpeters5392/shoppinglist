@@ -14,9 +14,13 @@ namespace shoppinglist
     {
         private IDataRefresher DataRefresher { get; }
 
+        public static App Instance { get; private set; }
+
         public App()
         {
             InitializeComponent();
+
+            Instance = this;
 
             Startup.Initialize();
 

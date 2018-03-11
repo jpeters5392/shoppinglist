@@ -57,15 +57,22 @@ namespace shoppinglist.ViewModels
 
                 _categories = this.WhenAnyValue(x => x.Cache.Categories)
                                   .Select(categories => {
-                                      var vms = categories.Select(category => new CategoryViewModel(category));
+                    var vms = categories.Where(category => !string.IsNullOrWhiteSpace(category.Name)).Select(category => new CategoryViewModel(category));
                                       return new ObservableCollection<CategoryViewModel>(vms);
                                   })
                                   .ToProperty(this, x => x.Categories)
                                   .DisposeWith(disposables);
 
-                AddCategory.Select(category => category)
+                AddCategory.Where(name => !string.IsNullOrWhiteSpace(name))
+                           .Select(category => category)
                            .Do(_ => Debug.WriteLine("Adding category item"))
                            .InvokeCommand(this, x => x.CategoryService.AddCategoryItem)
+                           .DisposeWith(disposables);
+
+                AddCategory.Where(name => string.IsNullOrWhiteSpace(name))
+                           .Subscribe(async _ => {
+                               await App.Instance.MainPage.DisplayAlert("Error", "You must enter a category name", "OK");
+                           })
                            .DisposeWith(disposables);
 
                 Refresh.Select(_ => Unit.Default)
