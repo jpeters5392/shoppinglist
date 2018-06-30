@@ -35,16 +35,6 @@ namespace shoppinglist.Services
 
 		public MealItemService() : base("allMealItems")
 		{
-            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<MealItem>>(async (_) =>
-            {
-                return await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync();
-            });
-
-            CacheData.ThrownExceptions.Subscribe(ex =>
-            {
-                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
-            }).DisposeWith(Disposables);
-
             InitCommands();
 
             CacheData.Do(_ => Debug.WriteLine("Caching meal items"))
@@ -63,6 +53,10 @@ namespace shoppinglist.Services
             }).DisposeWith(Disposables);
 
             Refresh.Select(_ => Unit.Default)
+                   .Do(_ => Debug.WriteLine("Updating UI prior to syncing"))
+                   .SelectMany(async _ => await LoadDataFromTable())
+                   .Do(data => CachedData = new ObservableCollection<MealItem>(data))
+                   .Select(_ => Unit.Default)
                    .Do(_ => Debug.WriteLine("Syncing meal items"))
                    .InvokeCommand(this, x => x.SyncItems)
                    .DisposeWith(Disposables);
@@ -86,6 +80,16 @@ namespace shoppinglist.Services
                        .InvokeCommand(this, x => x.AddItem)
                        .DisposeWith(Disposables);
 		}
+
+        protected override async Task<IEnumerable<MealItem>> LoadDataFromTable()
+        {
+            if (Table == null)
+            {
+                await Initialize();
+            }
+
+            return await Table.Where(x => x.Date >= DateTimeOffset.Now.LocalDateTime.Date).ToListAsync();
+        }
 
 		protected override ObservableCollection<MealItem> CachedData
 		{

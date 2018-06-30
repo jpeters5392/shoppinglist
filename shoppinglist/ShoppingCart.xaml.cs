@@ -4,6 +4,7 @@ using ReactiveUI.XamForms;
 using ReactiveUI;
 using shoppinglist.ViewModels;
 using Xamarin.Forms;
+using System.Linq;
 
 namespace shoppinglist
 {

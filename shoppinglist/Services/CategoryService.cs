@@ -35,16 +35,6 @@ namespace shoppinglist.Services
 
 		public CategoryService() : base("allCategories")
 		{
-            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<Category>>(async (_) =>
-            {
-                return await Table.ToListAsync();
-            });
-
-            CacheData.ThrownExceptions.Subscribe(ex =>
-            {
-                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
-            }).DisposeWith(Disposables);
-
             InitCommands();
 
             CacheData.Do(_ => Debug.WriteLine("Caching category items"))
@@ -64,6 +54,10 @@ namespace shoppinglist.Services
             }).DisposeWith(Disposables);
 
             Refresh.Select(_ => Unit.Default)
+                   .Do(_ => Debug.WriteLine("Updating UI prior to syncing"))
+                   .SelectMany(async _ => await LoadDataFromTable())
+                   .Do(data => CachedData = new ObservableCollection<Category>(data))
+                   .Select(_ => Unit.Default)
                    .Do(_ => Debug.WriteLine("Syncing category items"))
                    .InvokeCommand(this, x => x.SyncItems).DisposeWith(Disposables);
 
@@ -84,6 +78,16 @@ namespace shoppinglist.Services
                            .InvokeCommand(this, x => x.AddItem)
                            .DisposeWith(Disposables);
 		}
+
+        protected override async Task<IEnumerable<Category>> LoadDataFromTable()
+        {
+            if (Table == null)
+            {
+                await Initialize();
+            }
+
+            return await Table.ToListAsync();
+        }
 
         protected override ObservableCollection<Category> CachedData
         {

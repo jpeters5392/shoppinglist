@@ -1,14 +1,17 @@
 ﻿<Properties StartupConfiguration="{5F765C75-0A7E-47B3-8370-28EB91185EB4}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="shoppinglist/ViewModels/ShoppingCartViewModel.cs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
-      <File FileName="shoppinglist/Services/CategoryService.cs" Line="54" Column="79" />
-      <File FileName="shoppinglist/ViewModels/CategoriesViewModel.cs" Line="71" Column="17" />
-      <File FileName="shoppinglist/App.xaml" Line="17" Column="1" />
-      <File FileName="shoppinglist/ViewModels/MealPlannerViewModel.cs" Line="22" Column="61" />
-      <File FileName="shoppinglist/ViewModels/ShoppingCartViewModel.cs" Line="132" Column="97" />
+      <File FileName="shoppinglist/App.xaml.cs" Line="1" Column="1" />
+      <File FileName="shoppinglist/ViewModels/ShoppingCartViewModel.cs" Line="114" Column="140" />
+      <File FileName="shoppinglist/ShoppingCart.xaml.cs" Line="26" Column="1" />
+      <File FileName="shoppinglist/Services/AzureService.cs" Line="180" Column="18" />
+      <File FileName="shoppinglist/Services/ShoppingItemService.cs" Line="141" Column="13" />
+      <File FileName="shoppinglist/Services/MealItemService.cs" Line="90" Column="13" />
+      <File FileName="shoppinglist/Services/CategoryService.cs" Line="88" Column="13" />
+      <File FileName="Droid/Properties/AndroidManifest.xml" Line="2" Column="92" />
     </Files>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Release" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>

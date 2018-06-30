@@ -45,6 +45,8 @@ namespace shoppinglist.Services
 
         protected ReactiveCommand<IList<T>, IList<T>> CacheCollection { get; set; }
 
+        protected abstract Task<IEnumerable<T>> LoadDataFromTable();
+
         public ReactiveCommand<T, T> AddItem { get; protected set; }
 
         public ReactiveCommand<T, T> UpdateItem { get; protected set; }
@@ -60,6 +62,16 @@ namespace shoppinglist.Services
 
         protected void InitCommands()
         {
+            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<T>>(async (_) =>
+            {
+                return await LoadDataFromTable();
+            });
+
+            CacheData.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
+            }).DisposeWith(Disposables);
+
             SyncItems = ReactiveCommand.CreateFromTask<Unit, SyncStatus>(async (_) =>
             {
                 return await PerformSync();
@@ -74,7 +86,7 @@ namespace shoppinglist.Services
 
             CacheCollection = ReactiveCommand.Create<IList<T>, IList<T>>(data =>
             {
-                CachedData = new ObservableCollection<T>(data);
+                UpdateCachedData(data);
                 return data;
             });
 
@@ -127,6 +139,10 @@ namespace shoppinglist.Services
 
             Observable.Merge(AddItem, UpdateItem, DeleteItem)
                       .Select(_ => Unit.Default)
+                      .Do(_ => Debug.WriteLine("Updating UI prior to syncing"))
+                      .SelectMany(async _ => await LoadDataFromTable())
+                      .Do(UpdateCachedData)
+                      .Select(_ => Unit.Default)
                       .Do(_ => Debug.WriteLine("Syncing after changing items"))
                       .InvokeCommand(this, x => x.SyncItems)
                       .DisposeWith(Disposables);
@@ -136,6 +152,11 @@ namespace shoppinglist.Services
                      .Do(_ => Debug.WriteLine("Caching sync'd items"))
                      .InvokeCommand(this, x => x.CacheData)
                      .DisposeWith(Disposables);
+        }
+
+        protected void UpdateCachedData(IEnumerable<T> data)
+        {
+            CachedData = new ObservableCollection<T>(data);
         }
 
         public virtual void Dispose()

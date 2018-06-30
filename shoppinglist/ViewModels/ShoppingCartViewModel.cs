@@ -24,11 +24,8 @@ namespace shoppinglist.ViewModels
 
         public ReactiveCommand CloseAddForm { get; }
 
-		private ObservableAsPropertyHelper<IEnumerable<ShoppingItem>> _rawShoppingItems;
-		public IEnumerable<ShoppingItem> RawShoppingItems => _rawShoppingItems.Value;
-
-		private ObservableAsPropertyHelper<ObservableCollection<Category>> _rawCategories;
-        public ObservableCollection<Category> RawCategories => _rawCategories.Value;
+		private ObservableAsPropertyHelper<IDictionary<string, Category>> _rawCategories;
+        public IDictionary<string, Category> RawCategories => _rawCategories.Value;
 
 		private ObservableAsPropertyHelper<ObservableCollection<ShoppingItemGroupViewModel>> _shoppingItems;
 		public ObservableCollection<ShoppingItemGroupViewModel> ShoppingItems
@@ -37,7 +34,7 @@ namespace shoppinglist.ViewModels
 		}
 
         private ObservableAsPropertyHelper<ObservableCollection<string>> _categories;
-		public ObservableCollection<string> Categories
+        public ObservableCollection<string> Categories
 		{
 			get => _categories.Value;
 		}
@@ -80,10 +77,6 @@ namespace shoppinglist.ViewModels
         private ObservableAsPropertyHelper<bool> _isLoadingData;
         public bool IsLoadingData => _isLoadingData.Value;
 
-        private Dictionary<string, string> CategoryItemsByKey;
-
-        private Dictionary<string, string> CategoryItemsByName;
-
         private ShoppingItemService ShoppingItemService { get; set; }
 
         private CategoryService CategoryService { get; set; }
@@ -103,9 +96,6 @@ namespace shoppinglist.ViewModels
             CategoryService = Locator.Current.GetService<CategoryService>();
             Cache = Locator.Current.GetService<DataCache>();
 
-            CategoryItemsByKey = new Dictionary<string, string>();
-            CategoryItemsByName = new Dictionary<string, string>();
-
             ShouldShowGrid = false;
 
             this.WhenActivated(disposables =>
@@ -113,55 +103,26 @@ namespace shoppinglist.ViewModels
                 var lifecycle = new LifecycleLogger(GetType());
                 lifecycle.DisposeWith(disposables);
 
-                _rawShoppingItems = this.WhenAnyValue(x => x.Cache.ShoppingItems)
-                                        .ToProperty(this, x => x.RawShoppingItems)
-                                        .DisposeWith(disposables);
-
                 _rawCategories = this.WhenAnyValue(x => x.Cache.Categories)
+                                     .ObserveOn(RxApp.MainThreadScheduler)
+                                     .Select(x => x.ToDictionary(category => category.Id))
                                      .ToProperty(this, x => x.RawCategories)
                                      .DisposeWith(disposables);
 
-                _categories = this.WhenAnyValue(x => x.RawCategories)
-                                    .Select(categories =>
-                                    {
-                                        CategoryItemsByKey.Clear();
-                                        CategoryItemsByName.Clear();
-
-                                        if (categories == null) return new ObservableCollection<string>();
-
-                    return new ObservableCollection<string>(categories.Where(category => !string.IsNullOrWhiteSpace(category.Name))
-                                                            .Select(category => {
-                                            CategoryItemsByKey.Add(category.Id, category.Name);
-                                            CategoryItemsByName.Add(category.Name, category.Id);
-                                            return category.Name;
-                                        }));
-                                    })
+                _categories = this.WhenAnyValue(x => x.Cache.Categories)
+                                  .ObserveOn(RxApp.MainThreadScheduler)
+                                  .Select(x => new ObservableCollection<string>(x.Select(cat => cat.Name).Where(catName => catName != null)))
                                   .ToProperty(this, x => x.Categories)
                                   .DisposeWith(disposables);
 
-                _shoppingItems = this.WhenAnyValue(x => x.RawShoppingItems, x => x.Categories)
+                _shoppingItems = this.WhenAnyValue(x => x.Cache.ShoppingItems, x => x.RawCategories)
                 .Select(results =>
                 {
                     if (results == null || results.Item1 == null || results.Item2 == null) return null;
                     var items = results.Item1;
-                    var categories = Categories.ToList();
-                    return new ObservableCollection<ShoppingItemGroupViewModel>(items.GroupBy(x => x.CategoryId).Select(x =>
-                    {
-                        string categoryName = "";
-                        if (x.Key != null && CategoryItemsByKey.ContainsKey(x.Key))
-                        {
-                            categoryName = CategoryItemsByKey[x.Key];
-                        }
-                        else
-                        {
-                            categoryName = "None";
-                        }
-
-                        var group = new ShoppingItemGroupViewModel(categoryName, string.Empty);
-                        group.AddRange(x.Select(item => new ShoppingItemViewModel(item)));
-                        return group;
-                    }));
+                    return new ObservableCollection<ShoppingItemGroupViewModel>(GroupShoppingItems(items));
                 })
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.ShoppingItems)
                 .DisposeWith(disposables);
 
@@ -171,7 +132,8 @@ namespace shoppinglist.ViewModels
                        .Do(_ => {
                            Debug.WriteLine("Performing Refresh command");
                         })
-                       .InvokeCommand(this, x => x.ShoppingItemService.Refresh).DisposeWith(disposables);
+                       .InvokeCommand(this, x => x.ShoppingItemService.Refresh)
+                       .DisposeWith(disposables);
 
                 AddShoppingItem.Where(x => !string.IsNullOrWhiteSpace(x.Item2))
                                .InvokeCommand(this, x => x.ShoppingItemService.AddShoppingItem)
@@ -191,7 +153,7 @@ namespace shoppinglist.ViewModels
                 string categoryId = null;
                 if (NewItemSelectedCategory > -1)
                 {
-                    categoryId = CategoryItemsByName[Categories.ToList()[NewItemSelectedCategory]];
+                    categoryId = RawCategories.Where(x => x.Value.Name == Categories[NewItemSelectedCategory]).First().Key;
                 }
 
                 var newItem = (categoryId, NewItemName, NewItemDescription, NewQuantity);
@@ -223,5 +185,25 @@ namespace shoppinglist.ViewModels
                 return DateTime.Now.Ticks;
             });
 		}
+
+        private IEnumerable<ShoppingItemGroupViewModel> GroupShoppingItems(ObservableCollection<ShoppingItem> items)
+        {
+            return items.GroupBy(x => x.CategoryId).Select(x =>
+            {
+                string categoryName = "";
+                if (x.Key != null && RawCategories.ContainsKey(x.Key))
+                {
+                    categoryName = RawCategories[x.Key].Name;
+                }
+                else
+                {
+                    categoryName = "None";
+                }
+
+                var group = new ShoppingItemGroupViewModel(categoryName, string.Empty);
+                group.AddRange(x.Select(item => new ShoppingItemViewModel(item)));
+                return group;
+            });
+        }
 	}
 }

@@ -41,16 +41,6 @@ namespace shoppinglist.Services
 
         public ShoppingItemService(): base("allShoppingItems")
         {
-            CacheData = ReactiveCommand.CreateFromTask<Unit, IEnumerable<ShoppingItem>>(async (_) =>
-            {
-                return await Table.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).ToListAsync();
-            });
-
-            CacheData.ThrownExceptions.Subscribe(ex =>
-            {
-                Debug.WriteLine($"Failed to CacheData: {ex.Message}");
-            }).DisposeWith(Disposables);
-
             InitCommands();
 
             CacheData.Do(_ => Debug.WriteLine("Caching shopping items"))
@@ -69,6 +59,10 @@ namespace shoppinglist.Services
             }).DisposeWith(Disposables);
 
             Refresh.Select(_ => Unit.Default)
+                   .Do(_ => Debug.WriteLine("Updating UI prior to syncing"))
+                   .SelectMany(async _ => await LoadDataFromTable())
+                   .Do(data => CachedData = new ObservableCollection<ShoppingItem>(data))
+                   .Select(_ => Unit.Default)
                    .Do(_ => Debug.WriteLine("Syncing shopping items"))
                    .InvokeCommand(this, x => x.SyncItems)
                    .DisposeWith(Disposables);
@@ -96,7 +90,6 @@ namespace shoppinglist.Services
             CompleteItem = ReactiveCommand.CreateFromTask<string, ShoppingItem>(async itemId =>
             {
                 await Initialize();
-                await PerformSync();
 
                 var item = await Table.LookupAsync(itemId);
                 item.CompletedOn = DateTime.Now;
@@ -114,7 +107,6 @@ namespace shoppinglist.Services
             UncompleteItem = ReactiveCommand.CreateFromTask<string, ShoppingItem>(async itemId =>
             {
                 await Initialize();
-                await PerformSync();
 
                 var item = await Table.LookupAsync(itemId);
                 item.CompletedOn = DateTime.MinValue;
@@ -131,9 +123,23 @@ namespace shoppinglist.Services
 
             Observable.Merge(CompleteItem, UncompleteItem)
                       .Select(_ => Unit.Default)
+                      .Do(_ => Debug.WriteLine("Updating UI prior to syncing"))
+                      .SelectMany(async _ => await LoadDataFromTable())
+                      .Do(data => CachedData = new ObservableCollection<ShoppingItem>(data))
                       .Do(_ => Debug.WriteLine("Toggling shopping item"))
+                      .Select(_ => Unit.Default)
                       .InvokeCommand(this, x => x.SyncItems)
                       .DisposeWith(Disposables);
+        }
+
+        protected override async Task<IEnumerable<ShoppingItem>> LoadDataFromTable()
+        {
+            if (Table == null)
+            {
+                await Initialize();
+            }
+
+            return await Table.Where(x => x.CompletedOn == DateTime.MinValue || x.CompletedOn >= DateTime.Now.AddHours(-24)).ToListAsync();
         }
 
 		protected override ObservableCollection<ShoppingItem> CachedData
